@@ -1,7 +1,7 @@
-@set oos_path=D:\UNIX V6++V1\oos
-@set mingw_path=D:\UNIX V6++V1\MinGW\bin
-@set nasm_path=D:\UNIX V6++V1\NASM
-@set bochs_path=D:\UNIX V6++V1\Bochs-2.6
+@set oos_path=C:\Users\Sia-Sheerland\Desktop\OS_practice\UNIX\oos
+@set mingw_path=C:\Users\Sia-Sheerland\Desktop\OS_practice\UNIX\MinGW\bin
+@set nasm_path=C:\Users\Sia-Sheerland\Desktop\OS_practice\UNIX\NASM
+@set bochs_path=C:\Users\Sia-Sheerland\Desktop\OS_practice\UNIX\Bochs-2.6
 @set BXSHARE=%bochs_path%
 @set partcopy_path=%oos_path%\tools\partcopy
 
