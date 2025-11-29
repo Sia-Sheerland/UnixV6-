@@ -10,7 +10,7 @@ bool Diagnose::trace_on = true;
 
 Diagnose::Diagnose()
 {
-	//È«²¿¶¼ÊÇstatic³ÉÔ±±äÁ¿£¬ËùÒÔÃ»ÓÐÊ²Ã´ÐèÒªÔÚ¹¹Ôìº¯ÊýÖÐ³õÊ¼»¯µÄ¡£
+	//È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½staticï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ê²Ã´ï¿½ï¿½Òªï¿½Ú¹ï¿½ï¿½ìº¯ï¿½ï¿½ï¿½Ð³ï¿½Ê¼ï¿½ï¿½ï¿½Ä¡ï¿½
 }
 
 Diagnose::~Diagnose()
@@ -29,8 +29,8 @@ void Diagnose::TraceOff()
 }
 
 /*
-	ÄÜ¹»Êä³ö¸ñÊ½»¯ºóµÄ×Ö·û´®£¬Ä¿Ç°Ö»ÄÜÊ¶±ðÒ»Ð©%d %x  %s ºÍ%n;
-	Ã»ÓÐ¼ì²é´íÎó¹¦ÄÜ£¬% ºÍ ÖµÆ¥ÅäÒª×Ô¼º×¢Òâ¡£
+	ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Ç°Ö»ï¿½ï¿½Ê¶ï¿½ï¿½Ò»Ð©%d %x  %s ï¿½ï¿½%n;
+	Ã»ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½% ï¿½ï¿½ ÖµÆ¥ï¿½ï¿½Òªï¿½Ô¼ï¿½×¢ï¿½â¡£
 */
 void Diagnose::Write(const char* fmt, ...)
 {
@@ -38,9 +38,9 @@ void Diagnose::Write(const char* fmt, ...)
 	{
 		return;
 	}
-	//Ê¹va_argÖÐ´æ·Å²ÎÊýfmtµÄ ¡°ºóÒ»¸ö²ÎÊý¡± ËùÔÚµÄÄÚ´æµØÖ·
-	//fmtµÄÄÚÈÝ±¾ÉíÊÇ×Ö·û´®µÄÊ×µØÖ·(Õâ²»ÊÇÎÒÃÇÒªµÄ)£¬¶ø&fmt + 1ÔòÊÇÏÂÒ»¸ö²ÎÊýµÄµØÖ·
-	//²Î¿¼UNIX v6ÖÐµÄº¯Êýprf.c/printf(fmt, x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc)
+	//Ê¹va_argï¿½Ð´ï¿½Å²ï¿½ï¿½ï¿½fmtï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Úµï¿½ï¿½Ú´ï¿½ï¿½Ö·
+	//fmtï¿½ï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×µï¿½Ö·(ï¿½â²»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½&fmt + 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½Ö·
+	//ï¿½Î¿ï¿½UNIX v6ï¿½ÐµÄºï¿½ï¿½ï¿½prf.c/printf(fmt, x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc)
 	unsigned int * va_arg = (unsigned int *)&fmt + 1;
 	const char * ch = fmt;
 	
@@ -52,16 +52,16 @@ void Diagnose::Write(const char* fmt, ...)
 				return;
 			if(*ch == '\n')
 				break;
-			/*×¢Òâ£º '\n'ÊÇÒ»¸öµ¥Ò»×Ö·û£¬¶ø²»ÊÇ'\\'ºÍ ¡®n'Á½¸ö×Ö·ûµÄÏà¼Ó£¬ 
-			Æ©ÈçÔÚ×Ö·û´®"\nHello World!!"ÖÐÈç¹û±È½Ï if(*ch == '\\' && *(ch+1) == '\n' ) µÄ»°£¬
-			»áËÀµÄºÝ²ÒµÄ£¡*/
+			/*×¢ï¿½â£º '\n'ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'\\'ï¿½ï¿½ ï¿½ï¿½n'ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ 
+			Æ©ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½"\nHello World!!"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ if(*ch == '\\' && *(ch+1) == '\n' ) ï¿½Ä»ï¿½ï¿½ï¿½
+			ï¿½ï¿½ï¿½ï¿½ï¿½ÄºÝ²ÒµÄ£ï¿½*/
 			WriteChar(*ch++);
 		}
 		
 		ch++;	//skip the '%' or '\n'   
 
 		if(*ch == 'd' || *ch == 'x')
-		{//%d »ò %x ¸ñÊ½À´Êä³ö£¬µ±È»ÒªÌí¼Ó°Ë½øÖÆºÍ¶þ½øÖÆÒ²ºÜÈÝÒ×£¬µ«ÓÃ´¦²»´ó¡£
+		{//%d ï¿½ï¿½ %x ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»Òªï¿½ï¿½ï¿½Ó°Ë½ï¿½ï¿½ÆºÍ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½×£ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½
 			int value = (int)(*va_arg);
 			va_arg++;
 			if(*ch == 'x')
@@ -71,7 +71,7 @@ void Diagnose::Write(const char* fmt, ...)
 		}
 		
 		else if(*ch == 's')
-		{//%s ¸ñÊ½À´Êä³ö
+		{//%s ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½
 			ch++;	//skip the 's'
 			char *str = (char *)(*va_arg);
 			va_arg++;
@@ -88,13 +88,13 @@ void Diagnose::Write(const char* fmt, ...)
 }
 
 /*
-	²Î¿¼UNIX v6ÖÐµÄº¯Êýprf.c/printn(n,b)
-	´Ëº¯ÊýµÄ¹¦ÄÜÊÇ½«Ò»¸öÖµvalueÒÔbase½øÖÆµÄ·½Ê½ÏÔÊ¾³öÀ´¡£
+	ï¿½Î¿ï¿½UNIX v6ï¿½ÐµÄºï¿½ï¿½ï¿½prf.c/printn(n,b)
+	ï¿½Ëºï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½Ç½ï¿½Ò»ï¿½ï¿½Öµvalueï¿½ï¿½baseï¿½ï¿½ï¿½ÆµÄ·ï¿½Ê½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 void Diagnose::PrintInt(unsigned int value, int base)
 {
-	//ÒòÎªÊý×Ö0¡«9 ºÍ A~FµÄASCIIÂëÖ®¼ä²»ÊÇÁ¬ÐøµÄ£¬ËùÒÔ²»ÄÜ¼òµ¥Í¨¹ý
-	//ASCII(i) = i + '0'Ö±½Ó¼ÆËãµÃµ½£¬Òò´ËÓÃÁËDigits×Ö·ûÊý×é¡£
+	//ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½9 ï¿½ï¿½ A~Fï¿½ï¿½ASCIIï¿½ï¿½Ö®ï¿½ä²»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½Ü¼ï¿½Í¨ï¿½ï¿½
+	//ASCII(i) = i + '0'Ö±ï¿½Ó¼ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Digitsï¿½Ö·ï¿½ï¿½ï¿½ï¿½é¡£
 	static char Digits[] = "0123456789ABCDEF";
 	int i;
 	
@@ -118,7 +118,8 @@ void Diagnose::WriteChar(const char ch)
 
 	if(Diagnose::m_Row >= Diagnose::SCREEN_ROWS)
 	{
-		Diagnose::ClearScreen();
+		Diagnose::m_Row = Diagnose::SCREEN_ROWS - 1;
+		Diagnose::ScrollScreen();
 	}
 
 	Diagnose::m_VideoMemory[Diagnose::m_Row * COLUMNS + Diagnose::m_Column] = (unsigned char) ch | Diagnose::COLOR;
@@ -135,5 +136,23 @@ void Diagnose::ClearScreen()
 	for(i = 0; i < (COLUMNS * ROWS); i++)
 	{
 		Diagnose::m_VideoMemory[i + m_Row * COLUMNS] = (unsigned char) ' ' | Diagnose::COLOR;
+	}
+}
+
+void Diagnose::ScrollScreen()
+{
+	unsigned int i;
+	unsigned int startRow = Diagnose::SCREEN_ROWS - Diagnose::ROWS;
+
+	/* ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½Æµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	for ( i = 0; i < COLUMNS * (ROWS - 1); i++ )
+	{
+		Diagnose::m_VideoMemory[i + startRow * COLUMNS] = Diagnose::m_VideoMemory[i + startRow * COLUMNS + COLUMNS];
+	}
+
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	for ( i = COLUMNS * (ROWS - 1); i < COLUMNS * ROWS; i++ )
+	{
+		Diagnose::m_VideoMemory[i + startRow * COLUMNS] = (unsigned char)' ' | Diagnose::COLOR;
 	}
 }

@@ -48,7 +48,7 @@ void CRT::CRTStart(TTy* pTTy)
 			m_Position++;
 			break;
 
-		default:	/* ÔÚÆÁÄ»ÉÏ»ØÏÔÆÕÍ¨×Ö·û */
+		default:	/* ï¿½ï¿½ï¿½ï¿½Ä»ï¿½Ï»ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ö·ï¿½ */
 			WriteChar(ch);
 			m_Position++;
 			break;
@@ -63,10 +63,10 @@ void CRT::MoveCursor(unsigned int col, unsigned int row)
 		return;
 	}
 
-	/* ¼ÆËã¹â±êÆ«ÒÆÁ¿ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ */
 	unsigned short cursorPosition = row * CRT::COLUMNS + col;
 
-	/* Ñ¡Ôñ r14ºÍr15¼Ä´æÆ÷£¬·Ö±ðÎª¹â±êÎ»ÖÃµÄ¸ß8Î»ºÍµÍ8Î» */
+	/* Ñ¡ï¿½ï¿½ r14ï¿½ï¿½r15ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Îªï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¸ï¿½8Î»ï¿½Íµï¿½8Î» */
 	IOPort::OutByte(CRT::VIDEO_ADDR_PORT, 14);
 	IOPort::OutByte(CRT::VIDEO_DATA_PORT, cursorPosition >> 8);
 	IOPort::OutByte(CRT::VIDEO_ADDR_PORT, 15);
@@ -78,11 +78,11 @@ void CRT::NextLine()
 	m_CursorX = 0;
 	m_CursorY += 1;
 
-	/* ³¬³ö×î´óÐÐÊý */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ðµ×²ï¿½ */
 	if ( m_CursorY >= CRT::ROWS )
 	{
-		m_CursorY = 0;
-		ClearScreen();
+		m_CursorY = CRT::ROWS - 1;
+		ScrollScreen();
 	}
 	MoveCursor(m_CursorX, m_CursorY);
 }
@@ -91,7 +91,7 @@ void CRT::BackSpace()
 {
 	m_CursorX--;
 
-	/* ÒÆ¶¯¹â±ê£¬Èç¹ûÒª»Øµ½ÉÏÒ»ÐÐµÄ»° */
+	/* ï¿½Æ¶ï¿½ï¿½ï¿½ê£¬ï¿½ï¿½ï¿½Òªï¿½Øµï¿½ï¿½ï¿½Ò»ï¿½ÐµÄ»ï¿½ */
 	if ( m_CursorX < 0 )
 	{
 		m_CursorX = CRT::COLUMNS - 1;
@@ -103,14 +103,14 @@ void CRT::BackSpace()
 	}
 	MoveCursor(m_CursorX, m_CursorY);
 
-	/* ÔÚ¹â±êËùÔÚÎ»ÖÃÌîÉÏ¿Õ¸ñ */
+	/* ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿Õ¸ï¿½ */
 	m_VideoMemory[m_CursorY * COLUMNS + m_CursorX] = ' ' | CRT::COLOR;
 	// m_VideoMemory[m_CursorY * COLUMNS + m_CursorX] = ' ' | 0x0A00;
 }
 
 void CRT::Tab()
 {
-	m_CursorX &= 0xFFFFFFF8;	/* Ïò×ó¶ÔÆëµ½Ç°Ò»¸öTab±ß½ç */
+	m_CursorX &= 0xFFFFFFF8;	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ëµ½Ç°Ò»ï¿½ï¿½Tabï¿½ß½ï¿½ */
 	m_CursorX += 8;
 	// const int TabWidth = 10;
 	// m_CursorX -= m_CursorX % TabWidth;
@@ -141,6 +141,23 @@ void CRT::ClearScreen()
 	unsigned int i;
 
 	for ( i = 0; i < COLUMNS * ROWS; i++ )
+	{
+		m_VideoMemory[i] = (unsigned short)' ' | CRT::COLOR;
+	}
+}
+
+void CRT::ScrollScreen()
+{
+	unsigned int i;
+
+	/* ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½Æµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	for ( i = 0; i < COLUMNS * (ROWS - 1); i++ )
+	{
+		m_VideoMemory[i] = m_VideoMemory[i + COLUMNS];
+	}
+
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ */
+	for ( i = COLUMNS * (ROWS - 1); i < COLUMNS * ROWS; i++ )
 	{
 		m_VideoMemory[i] = (unsigned short)' ' | CRT::COLOR;
 	}

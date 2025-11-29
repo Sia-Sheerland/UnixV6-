@@ -21,6 +21,7 @@ public:
 
 	static void Write(const char* fmt, ...);
 	static void ClearScreen();
+	static void ScrollScreen();
 
 private:	
 	static void PrintInt(unsigned int value, int base);
@@ -33,7 +34,7 @@ public:
 
 private:
 	static unsigned short*	m_VideoMemory;
-	/* DebugÊä³ö¿ª¹Ø */
+	/* Debugï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	static bool trace_on;
 };
 
