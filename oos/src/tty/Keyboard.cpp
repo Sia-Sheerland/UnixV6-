@@ -4,6 +4,7 @@
 #include "ProcessManager.h"
 #include "Video.h"
 #include "CharDevice.h"
+#include "CRT.h"
 
 char Keyboard::Keymap[] = {
 	0,0x1b,'1','2','3','4','5','6',		/* 0x00-0x07 0, <esc>,1,2,3,4,5,6, */
@@ -50,19 +51,19 @@ void Keyboard::KeyboardHandler( struct pt_regs* reg, struct pt_context* context 
 
 	while ( (status & Keyboard::DATA_BUFFER_BUSY) && limit-- )
 	{
-		/* Èç¹û¼üÅÌ»º´æÂú¾ÍÒª¶ÁÈëÊ£ÏÂµÄÉ¨ÃèÂë */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ê£ï¿½Âµï¿½É¨ï¿½ï¿½ï¿½ï¿½ */
 		unsigned char scancode = IOPort::InByte(Keyboard::DATA_PORT);
 
-		/* ÒÔÏÂµÄÅÐ¶Ï¹ý³ÌÓÐµãÏñÓÐÏÞ×´Ì¬»ú£¬²»¹ýÃ²ËÆÓÐµÄµØ·½Ã»ÓÐ»¯¼ò */
+		/* ï¿½ï¿½ï¿½Âµï¿½ï¿½Ð¶Ï¹ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ÐµÄµØ·ï¿½Ã»ï¿½Ð»ï¿½ï¿½ï¿½ */
 		if ( 0 == pre_state )
 		{
 			if ( 0xE0 == scancode || 0xE1 == scancode )
 			{
-				/* ½«×´Ì¬¸ÄÎª0xe0±íÊ¾»¹ÓÐ×Ö·ûÃ»ÓÐ¶ÁÈë */
-				/* ²úÉú0xe1Ö»ÓÐÒ»ÖÖ×´Ì¬£¬ÄÇ¾ÍÊÇpause¼ü±»°´ÏÂ£¬°´¼ü°´ÏÂÐòÁÐÎª0xe1,0x1d,0x45£¬°´¼ü¶Ï¿ªÐòÁÐÎª0xe1,0x9d,0xc5  */
+				/* ï¿½ï¿½×´Ì¬ï¿½ï¿½Îª0xe0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½Ã»ï¿½Ð¶ï¿½ï¿½ï¿½ */
+				/* ï¿½ï¿½ï¿½ï¿½0xe1Ö»ï¿½ï¿½Ò»ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½pauseï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0xe1,0x1d,0x45ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½Îª0xe1,0x9d,0xc5  */
 				pre_state = scancode;
 			}
-			else	/* ·ÇÀ©Õ¹¼ü */
+			else	/* ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ */
 			{
 				pre_state = 0;
 				Keyboard::HandleScanCode(scancode, 0);
@@ -70,15 +71,15 @@ void Keyboard::KeyboardHandler( struct pt_regs* reg, struct pt_context* context 
 		}
 		else if ( 0xE0 == pre_state )
 		{
-			/* À©Õ¹¼üµÄµÚ¶þ¸öÉ¨ÃèÂë */
+			/* ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ÄµÚ¶ï¿½ï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ */
 			pre_state = 0;
 			Keyboard::HandleScanCode(scancode, 0xe0);
 		}
 		else if ( 0xE1 == pre_state && ( 0x1d == scancode || 0x9d == scancode ) )
 		{
-			pre_state = 0x100;	/* ÖÐ¼ä×´Ì¬£¬±íÊ¾pauseÒÑ¾­ÓÐÁ½¸ö¼üÎÇºÏ */
+			pre_state = 0x100;	/* ï¿½Ð¼ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ê¾pauseï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Çºï¿½ */
 		}
-		else if ( pre_state == 0x100 && 0x45 == scancode )	/* Ö»ÐèÒªÖªµÀpause¼üÊ²Ã´Ê±ºò°´ÏÂ */
+		else if ( pre_state == 0x100 && 0x45 == scancode )	/* Ö»ï¿½ï¿½ÒªÖªï¿½ï¿½pauseï¿½ï¿½Ê²Ã´Ê±ï¿½ï¿½ï¿½ï¿½ */
 		{
 			pre_state = 0;
 			Keyboard::HandleScanCode(scancode, 0xe1);
@@ -104,14 +105,14 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 	switch ( scanCode )
 	{
 	case SCAN_ALT:
-		if ( 0xE0 == expand )	/* Ê¹ÓÃÀ©Õ¹¼ü£¬±íÊ¾ÊÇÓÒ±ßµÄ alt°´ÏÂ */
+		if ( 0xE0 == expand )	/* Ê¹ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ò±ßµï¿½ altï¿½ï¿½ï¿½ï¿½ */
 			Mode |= M_RALT;
 		else
 			Mode |= M_LALT;
 		break;
 
 	case SCAN_CTRL:
-		if ( 0xE0 == expand )	/* Ê¹ÓÃÀ©Õ¹¼ü£¬±íÊ¾ÊÇÓÒ±ßµÄ ctrl°´ÏÂ */
+		if ( 0xE0 == expand )	/* Ê¹ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ò±ßµï¿½ ctrlï¿½ï¿½ï¿½ï¿½ */
 			Mode |= M_RCTRL;
 		else
 			Mode |= M_LCTRL;
@@ -125,7 +126,7 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 		Mode |= M_RSHIFT;
 		break;
 
-	/* ´¦Àí°´¼ü±»ËÉ¿ªµÄÇé¿ö£¬Çå¿ÕModeÖÐ°´¼ü¶ÔÓ¦µÄ±êÖ¾Î» */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Modeï¿½Ð°ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä±ï¿½Ö¾Î» */
 	case SCAN_ALT + 0x80:
 		if ( 0xE0 == expand )
 			Mode &= ~M_RALT;
@@ -148,11 +149,11 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 		Mode &= ~M_RSHIFT;
 		break;
 
-	/* Ã¿´Î°´ÏÂ¾Í·´×ª¸Ä±ä×´Ì¬Î» */
+	/* Ã¿ï¿½Î°ï¿½ï¿½Â¾Í·ï¿½×ªï¿½Ä±ï¿½×´Ì¬Î» */
 	
 	/* 
-	 * M_DOWN_NUMLOCKºê±íÊ¾NUMLOCK±»°´ÏÂ£¬ÔÚÃ»ÓÐ°´ÏÂµÄ
-	 * ×´Ì¬ÏÂ°´ÏÂNumLock¼üÐèÒª·´×ª×´Ì¬£¬²¢ÖÃnumlock¼üÃ»ÓÐËÉ¿ª
+	 * M_DOWN_NUMLOCKï¿½ï¿½ï¿½Ê¾NUMLOCKï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½Ã»ï¿½Ð°ï¿½ï¿½Âµï¿½
+	 * ×´Ì¬ï¿½Â°ï¿½ï¿½ï¿½NumLockï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½×ª×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½numlockï¿½ï¿½Ã»ï¿½ï¿½ï¿½É¿ï¿½
 	 */
 	case SCAN_NUMLOCK:
 		isOK = Mode & M_DOWN_NUMLOCK;
@@ -181,7 +182,7 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 		}
 		break;
 
-	/* ÊÍ·ÅNumLock£¬CapsLock£¬ScrollLock¼ü */
+	/* ï¿½Í·ï¿½NumLockï¿½ï¿½CapsLockï¿½ï¿½ScrollLockï¿½ï¿½ */
 	case SCAN_NUMLOCK + 0x80:
 		Mode &= ~M_DOWN_NUMLOCK;
 		break;
@@ -192,6 +193,35 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 
 	case SCAN_SCRLOCK + 0x80:
 		Mode &= ~M_DOWN_SCRLOCK;
+		break;
+
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ */
+	case SCAN_PAGEUP:
+		if ( 0xE0 == expand )	/* Page Up ï¿½ï¿½ ï¿½ï¿½Õ¹ï¿½ï¿½ */
+		{
+			CRT::ScrollUp(5);	/* ï¿½ï¿½ï¿½Ï¶ï¿½5ï¿½ï¿½ */
+		}
+		break;
+
+	case SCAN_PAGEDOWN:
+		if ( 0xE0 == expand )	/* Page Down ï¿½ï¿½ ï¿½ï¿½Õ¹ï¿½ï¿½ */
+		{
+			CRT::ScrollDown(5);	/* ï¿½ï¿½ï¿½Â¹ï¿½ï¿½ï¿½5ï¿½ï¿½ */
+		}
+		break;
+
+	case SCAN_UP:
+		if ( 0xE0 == expand )	/* ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ ï¿½ï¿½Õ¹ï¿½ï¿½ */
+		{
+			CRT::ScrollUp(1);	/* ï¿½ï¿½ï¿½Ï¶ï¿½1ï¿½ï¿½ */
+		}
+		break;
+
+	case SCAN_DOWN:
+		if ( 0xE0 == expand )	/* ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ ï¿½ï¿½Õ¹ï¿½ï¿½ */
+		{
+			CRT::ScrollDown(1);	/* ï¿½ï¿½ï¿½Â¹ï¿½ï¿½ï¿½1ï¿½ï¿½ */
+		}
 		break;
 
 	default:
@@ -218,9 +248,9 @@ ScanCodeTranslate(unsigned char scanCode, int expand)
 	{
 		ch = 0x05;	/* Pause ASCII */
 	}
-	else if ( scanCode < 0x45 )	/* ·ÇÐ¡¼üÅÌºÍ¿ØÖÆ¼ü */
+	else if ( scanCode < 0x45 )	/* ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ÌºÍ¿ï¿½ï¿½Æ¼ï¿½ */
 	{
-		/* ¸ù¾ÝÉ¨ÃèÂëÓ³Éä±íÕÒµ½¶ÔÓ¦°´¼üµÄASCIIÂë */
+		/* ï¿½ï¿½ï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ASCIIï¿½ï¿½ */
 		if ( (Mode & M_LSHIFT) || (Mode & M_RSHIFT) )
 		{
 			ch = Shift_Keymap[scanCode];
@@ -232,16 +262,16 @@ ScanCodeTranslate(unsigned char scanCode, int expand)
 
 		if ( ch >= 'a' && ch <= 'z' )
 		{
-			/* ÊÇÐ¡Ð´×Ö·û¶øÇÒÒÑ¾­CapslockÁË£¬ÄÇÃ´×ª»»³É´óÐ´×Ö·û */
+			/* ï¿½ï¿½Ð¡Ð´ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½Capslockï¿½Ë£ï¿½ï¿½ï¿½Ã´×ªï¿½ï¿½ï¿½É´ï¿½Ð´ï¿½Ö·ï¿½ */
 			bReverse = ( (Mode & M_CAPSLOCK) ? 1 : 0 ) ^ ( (Mode & M_LSHIFT) || (Mode & M_RSHIFT) );
 
-			if ( (Mode & M_LCTRL) || (Mode & M_RCTRL) )	/* °´ÏÂctrl½øÐÐ×ªÒâ */
+			if ( (Mode & M_LCTRL) || (Mode & M_RCTRL) )	/* ï¿½ï¿½ï¿½ï¿½ctrlï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ */
 			{
-				if('c' ==  ch)  /* ctrl+c --> SIGINTÐÅºÅ£¬ËÍ¸ø³ý sched¡¢shell Ö®ÍâµÄËùÓÐ½ø³Ì */
+				if('c' ==  ch)  /* ctrl+c --> SIGINTï¿½ÅºÅ£ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ schedï¿½ï¿½shell Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½ */
 				{
 					ch = 0;
 
-					/* FLushÖÕ¶Ë */
+					/* FLushï¿½Õ¶ï¿½ */
 					TTy* pTTy = Kernel::Instance().GetDeviceManager().GetCharDevice(DeviceManager::TTYDEV).m_TTy;
 					if ( NULL != pTTy )
 					{
@@ -256,7 +286,7 @@ ScanCodeTranslate(unsigned char scanCode, int expand)
 				else
 				{
 					ch -= 'a';
-				    ch++;	/* ×ªÒå´Ó0x1 ¿ªÊ¼*/
+				    ch++;	/* ×ªï¿½ï¿½ï¿½0x1 ï¿½ï¿½Ê¼*/
 				}
 			}
 			else if ( bReverse )

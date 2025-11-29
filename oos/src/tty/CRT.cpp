@@ -129,11 +129,19 @@ void CRT::BackSpace()
 			m_CursorY = 0;
 		}
 	}
-	MoveCursor(m_CursorX, m_CursorY);
 
-	/* �ڹ������λ�����Ͽո� */
-	m_VideoMemory[m_CursorY * COLUMNS + m_CursorX] = ' ' | CRT::COLOR;
-	// m_VideoMemory[m_CursorY * COLUMNS + m_CursorX] = ' ' | 0x0A00;
+	/* �����ֻ������ʷ���� */
+	unsigned int bufferPos = m_CursorY * COLUMNS + m_CursorX;
+	m_HistoryBuffer[bufferPos] = ' ' | CRT::COLOR;
+
+	/* ���AutoScroll����ˢ����ʾ�ڴ� */
+	if ( m_AutoScroll && m_CursorY >= m_ViewStartLine && m_CursorY < m_ViewStartLine + ROWS )
+	{
+		unsigned int displayY = m_CursorY - m_ViewStartLine;
+		m_VideoMemory[displayY * COLUMNS + m_CursorX] = ' ' | CRT::COLOR;
+	}
+
+	MoveCursor(m_CursorX, m_CursorY - m_ViewStartLine);
 }
 
 void CRT::Tab()
