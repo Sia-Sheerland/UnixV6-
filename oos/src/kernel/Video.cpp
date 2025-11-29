@@ -8,6 +8,13 @@ unsigned int Diagnose::ROWS = 10;
 
 bool Diagnose::trace_on = true;
 
+/* ��ʷ�������� */
+static unsigned short g_DiagnoseHistoryBuffer[Diagnose::HISTORY_LINES * Diagnose::COLUMNS];
+unsigned short* Diagnose::m_HistoryBuffer = g_DiagnoseHistoryBuffer;
+unsigned int Diagnose::m_TotalLines = 0;
+unsigned int Diagnose::m_ViewStartLine = 0;
+bool Diagnose::m_AutoScroll = true;
+
 Diagnose::Diagnose()
 {
 	//ȫ������static��Ա����������û��ʲô��Ҫ�ڹ��캯���г�ʼ���ġ�
@@ -107,22 +114,62 @@ void Diagnose::NextLine()
 {
 	m_Row += 1;
 	m_Column = 0;
+
+	/* ������������� */
+	if ( m_Row >= m_TotalLines )
+	{
+		if ( m_TotalLines < HISTORY_LINES )
+		{
+			m_TotalLines++;
+		}
+		else
+		{
+			ScrollScreen();
+			m_Row = HISTORY_LINES - 1;
+		}
+	}
+
+	/* �Զ��������� */
+	if ( m_AutoScroll && m_TotalLines > ROWS )
+	{
+		m_ViewStartLine = m_TotalLines - ROWS;
+		RefreshScreen();
+	}
+	else if ( m_AutoScroll )
+	{
+		RefreshScreen();
+	}
 }
 
 void Diagnose::WriteChar(const char ch)
 {
+	/* ��ʼ����ʷ���� */
+	if ( m_TotalLines == 0 )
+	{
+		m_TotalLines = ROWS;
+		m_Row = 0;
+		for ( unsigned int i = 0; i < HISTORY_LINES * COLUMNS; i++ )
+		{
+			m_HistoryBuffer[i] = (unsigned short)' ' | Diagnose::COLOR;
+		}
+	}
+
 	if(Diagnose::m_Column >= Diagnose::COLUMNS)
 	{
 		NextLine();
 	}
 
-	if(Diagnose::m_Row >= Diagnose::SCREEN_ROWS)
+	/* д����ʷ���� */
+	unsigned int bufferPos = m_Row * COLUMNS + m_Column;
+	m_HistoryBuffer[bufferPos] = (unsigned char) ch | Diagnose::COLOR;
+
+	/* ���AutoScroll���ˢ����ʾ */
+	if ( m_AutoScroll && m_Row >= m_ViewStartLine && m_Row < m_ViewStartLine + ROWS )
 	{
-		Diagnose::m_Row = Diagnose::SCREEN_ROWS - 1;
-		Diagnose::ScrollScreen();
+		unsigned int screenRow = m_Row - m_ViewStartLine + (SCREEN_ROWS - ROWS);
+		Diagnose::m_VideoMemory[screenRow * COLUMNS + m_Column] = m_HistoryBuffer[bufferPos];
 	}
 
-	Diagnose::m_VideoMemory[Diagnose::m_Row * COLUMNS + Diagnose::m_Column] = (unsigned char) ch | Diagnose::COLOR;
 	Diagnose::m_Column++;
 }
 
@@ -142,17 +189,73 @@ void Diagnose::ClearScreen()
 void Diagnose::ScrollScreen()
 {
 	unsigned int i;
-	unsigned int startRow = Diagnose::SCREEN_ROWS - Diagnose::ROWS;
 
-	/* ����һ�е����ݸ��Ƶ���һ�� */
-	for ( i = 0; i < COLUMNS * (ROWS - 1); i++ )
+	/* ����ʷ�����������һ�е����ݸ��Ƶ���һ�� */
+	for ( i = 0; i < COLUMNS * (HISTORY_LINES - 1); i++ )
 	{
-		Diagnose::m_VideoMemory[i + startRow * COLUMNS] = Diagnose::m_VideoMemory[i + startRow * COLUMNS + COLUMNS];
+		m_HistoryBuffer[i] = m_HistoryBuffer[i + COLUMNS];
 	}
 
 	/* ��������һ�� */
-	for ( i = COLUMNS * (ROWS - 1); i < COLUMNS * ROWS; i++ )
+	for ( i = COLUMNS * (HISTORY_LINES - 1); i < COLUMNS * HISTORY_LINES; i++ )
 	{
-		Diagnose::m_VideoMemory[i + startRow * COLUMNS] = (unsigned char)' ' | Diagnose::COLOR;
+		m_HistoryBuffer[i] = (unsigned short)' ' | Diagnose::COLOR;
 	}
+}
+
+void Diagnose::RefreshScreen()
+{
+	unsigned int startRow = SCREEN_ROWS - ROWS;
+	unsigned int displayLines = (m_TotalLines < ROWS) ? m_TotalLines : ROWS;
+
+	/* ����ʷ�������ݸ��Ƶ���Ļ */
+	for ( unsigned int row = 0; row < displayLines; row++ )
+	{
+		unsigned int historyRow = m_ViewStartLine + row;
+		for ( unsigned int col = 0; col < COLUMNS; col++ )
+		{
+			m_VideoMemory[(startRow + row) * COLUMNS + col] = m_HistoryBuffer[historyRow * COLUMNS + col];
+		}
+	}
+
+	/* �������ж����հ��� */
+	for ( unsigned int row = displayLines; row < ROWS; row++ )
+	{
+		for ( unsigned int col = 0; col < COLUMNS; col++ )
+		{
+			m_VideoMemory[(startRow + row) * COLUMNS + col] = (unsigned short)' ' | Diagnose::COLOR;
+		}
+	}
+}
+
+void Diagnose::ScrollUp(unsigned int lines)
+{
+	if ( m_ViewStartLine >= lines )
+	{
+		m_ViewStartLine -= lines;
+	}
+	else
+	{
+		m_ViewStartLine = 0;
+	}
+
+	m_AutoScroll = false;
+	RefreshScreen();
+}
+
+void Diagnose::ScrollDown(unsigned int lines)
+{
+	unsigned int maxStartLine = (m_TotalLines > ROWS) ? (m_TotalLines - ROWS) : 0;
+
+	if ( m_ViewStartLine + lines <= maxStartLine )
+	{
+		m_ViewStartLine += lines;
+	}
+	else
+	{
+		m_ViewStartLine = maxStartLine;
+		m_AutoScroll = true;
+	}
+
+	RefreshScreen();
 }

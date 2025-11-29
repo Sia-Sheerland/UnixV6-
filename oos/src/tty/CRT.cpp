@@ -9,6 +9,13 @@ char* CRT::m_BeginChar = 0;
 
 unsigned int CRT::ROWS = 15;
 
+/* ��ʷ�������� */
+static unsigned short g_HistoryBufferData[CRT::HISTORY_LINES * CRT::COLUMNS];
+unsigned short* CRT::m_HistoryBuffer = g_HistoryBufferData;
+unsigned int CRT::m_TotalLines = 0;
+unsigned int CRT::m_ViewStartLine = 0;
+bool CRT::m_AutoScroll = true;
+
 void CRT::CRTStart(TTy* pTTy)
 {
 	char ch;
@@ -78,13 +85,34 @@ void CRT::NextLine()
 	m_CursorX = 0;
 	m_CursorY += 1;
 
-	/* ��������������һ�еײ� */
-	if ( m_CursorY >= CRT::ROWS )
+	/* ���������ǰ�ܺ������������һ�� */
+	if ( m_CursorY >= m_TotalLines )
 	{
-		m_CursorY = CRT::ROWS - 1;
-		ScrollScreen();
+		/* ���ֻ����HISTORY_LINES������ʷ���в��� */
+		if ( m_TotalLines < HISTORY_LINES )
+		{
+			m_TotalLines++;
+		}
+		else
+		{
+			/* ��ʷ�����������������ܷ��أ�*/
+			ScrollScreen();
+			m_CursorY = HISTORY_LINES - 1;
+		}
 	}
-	MoveCursor(m_CursorX, m_CursorY);
+
+	/* �Զ���������ײ� */
+	if ( m_AutoScroll && m_TotalLines > ROWS )
+	{
+		m_ViewStartLine = m_TotalLines - ROWS;
+		RefreshScreen();
+	}
+	else if ( m_AutoScroll )
+	{
+		RefreshScreen();
+	}
+
+	MoveCursor(m_CursorX, m_CursorY - m_ViewStartLine);
 }
 
 void CRT::BackSpace()
@@ -123,15 +151,34 @@ void CRT::Tab()
 
 void CRT::WriteChar(char ch)
 {
-	m_VideoMemory[m_CursorY * CRT::COLUMNS + m_CursorX] = (unsigned char) ch | CRT::COLOR;
+	/* ȷ����ʷ�������С */
+	if ( m_TotalLines == 0 )
+	{
+		m_TotalLines = ROWS;
+		/* ��ʼ����ʷ������Ϊ�հ� */
+		for ( unsigned int i = 0; i < HISTORY_LINES * COLUMNS; i++ )
+		{
+			m_HistoryBuffer[i] = (unsigned short)' ' | CRT::COLOR;
+		}
+	}
+
+	/* д����ʷ���������ǰλ�� */
+	unsigned int bufferPos = m_CursorY * COLUMNS + m_CursorX;
+	m_HistoryBuffer[bufferPos] = (unsigned char) ch | CRT::COLOR;
+
 	m_CursorX++;
-	
+
 	if ( m_CursorX >= CRT::COLUMNS )
 	{
 		NextLine();
 	}
     else
     {
+		/* ���AutoScroll����ˢ����һ���ַ� */
+		if ( m_AutoScroll )
+		{
+			m_VideoMemory[(m_CursorY - m_ViewStartLine) * COLUMNS + m_CursorX - 1] = m_HistoryBuffer[bufferPos];
+		}
     	MoveCursor(m_CursorX, m_CursorY);
     }
 }
@@ -150,16 +197,88 @@ void CRT::ScrollScreen()
 {
 	unsigned int i;
 
-	/* ����һ�е����ݸ��Ƶ���һ�� */
-	for ( i = 0; i < COLUMNS * (ROWS - 1); i++ )
+	/* ����ʷ�����������һ�е����ݸ��Ƶ���һ�� */
+	for ( i = 0; i < COLUMNS * (HISTORY_LINES - 1); i++ )
 	{
-		m_VideoMemory[i] = m_VideoMemory[i + COLUMNS];
+		m_HistoryBuffer[i] = m_HistoryBuffer[i + COLUMNS];
 	}
 
 	/* ��������һ�� */
-	for ( i = COLUMNS * (ROWS - 1); i < COLUMNS * ROWS; i++ )
+	for ( i = COLUMNS * (HISTORY_LINES - 1); i < COLUMNS * HISTORY_LINES; i++ )
 	{
-		m_VideoMemory[i] = (unsigned short)' ' | CRT::COLOR;
+		m_HistoryBuffer[i] = (unsigned short)' ' | CRT::COLOR;
+	}
+}
+
+void CRT::RefreshScreen()
+{
+	/* ����ʷ���������ݸ��Ƶ���Ļ */
+	unsigned int displayLines = (m_TotalLines < ROWS) ? m_TotalLines : ROWS;
+
+	for ( unsigned int row = 0; row < displayLines; row++ )
+	{
+		unsigned int historyRow = m_ViewStartLine + row;
+		for ( unsigned int col = 0; col < COLUMNS; col++ )
+		{
+			m_VideoMemory[row * COLUMNS + col] = m_HistoryBuffer[historyRow * COLUMNS + col];
+		}
+	}
+
+	/* �������ж����հ��� */
+	for ( unsigned int row = displayLines; row < ROWS; row++ )
+	{
+		for ( unsigned int col = 0; col < COLUMNS; col++ )
+		{
+			m_VideoMemory[row * COLUMNS + col] = (unsigned short)' ' | CRT::COLOR;
+		}
+	}
+}
+
+void CRT::ScrollUp(unsigned int lines)
+{
+	/* �������ٻ� */
+	if ( m_ViewStartLine >= lines )
+	{
+		m_ViewStartLine -= lines;
+	}
+	else
+	{
+		m_ViewStartLine = 0;
+	}
+
+	m_AutoScroll = false;
+	RefreshScreen();
+
+	/* �����������λ�� */
+	unsigned int displayY = m_CursorY - m_ViewStartLine;
+	if ( displayY < ROWS )
+	{
+		MoveCursor(m_CursorX, displayY);
+	}
+}
+
+void CRT::ScrollDown(unsigned int lines)
+{
+	/* �������¼�������� */
+	unsigned int maxStartLine = (m_TotalLines > ROWS) ? (m_TotalLines - ROWS) : 0;
+
+	if ( m_ViewStartLine + lines <= maxStartLine )
+	{
+		m_ViewStartLine += lines;
+	}
+	else
+	{
+		m_ViewStartLine = maxStartLine;
+		m_AutoScroll = true;	/* �������ײ��Զ����� */
+	}
+
+	RefreshScreen();
+
+	/* �����������λ�� */
+	unsigned int displayY = m_CursorY - m_ViewStartLine;
+	if ( displayY < ROWS )
+	{
+		MoveCursor(m_CursorX, displayY);
 	}
 }
 
