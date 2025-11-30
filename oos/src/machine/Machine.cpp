@@ -4,11 +4,12 @@
 #include "TimeInterrupt.h"
 #include "DiskInterrupt.h"
 #include "KeyboardInterrupt.h"
+#include "MouseInterrupt.h"
 #include "SystemCall.h"
 
-Machine Machine::instance;	/*µ¥Ì¬ÀàÊµÀýµÄ¶¨Òå*/
+Machine Machine::instance;	/*ï¿½ï¿½Ì¬ï¿½ï¿½Êµï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½*/
 
-/* È«¾ÖGDT¡¢IDT¡¢TSS±äÁ¿ */
+/* È«ï¿½ï¿½GDTï¿½ï¿½IDTï¿½ï¿½TSSï¿½ï¿½ï¿½ï¿½ */
 GDT g_GDT;
 IDT g_IDT;
 
@@ -44,14 +45,14 @@ void Machine::InitIDT()
 {
 	this->m_IDT = &g_IDT;
 	/*
-	 * 1. ½«IDTÖÐ0 - 255¸ö±íÏîÈ«²¿ÌîÈëÄ¬ÈÏÖÐ¶Ï/Òì³£´¦Àíº¯ÊýÈë¿Ú£¬È·
-	 *    ±£ÈÎÒâÒ»ÖÖÖÐ¶Ï/Òì³£·¢ÉúÊ±¶¼»á±»´¦Àí£¬±ÜÃâÄÚºË±ÀÀ£¡£
-	 * 2. ¶ÔINT 0 - 31ºÅÒì³££¬Ê¹ÓÃ·ÇÄ¬ÈÏµÄÖÐ¶Ï/Òì³£´¦Àí³ÌÐò¸²¸ÇÏÈÇ°
-	 *    Ä¬ÈÏ´¦Àíº¯ÊýÈë¿Ú¡£
-	 * 3. ÉèÖÃÊ±ÖÓÖÐ¶Ï¡¢¼üÅÌÖÐ¶Ï¡¢´ÅÅÌÖÐ¶ÏµÈ¶ÔÓ¦µÄÖÐ¶ÏÈë¿Ú¡£
-	 * 4. INT 0 - 31ºÅÒì³£ÖÐÊ¹ÓÃÄ¬ÈÏ´¦Àíº¯ÊýµÄ£¬Ò»°ãÇé¿öÏÂ²»¿ÉÄÜ·¢Éú£¬
-	 *    ¶ÔÓÚÕâÐ©Òì³£µÄ´¦ÀíÁ÷³Ì²»½øÐÐÏÖ³¡±£´æºÍ»Ö¸´£¬½öÊä³ö´íÎóÐÅÏ¢£¬
-	 *    ½øÈëËÀÑ­»·£¬µÈ´ýÈË¹¤¸ÉÔ¤¡£
+	 * 1. ï¿½ï¿½IDTï¿½ï¿½0 - 255ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½Ð¶ï¿½/ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½È·
+	 *    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½/ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½á±»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚºË±ï¿½ï¿½ï¿½ï¿½ï¿½
+	 * 2. ï¿½ï¿½INT 0 - 31ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Ê¹ï¿½Ã·ï¿½Ä¬ï¿½Ïµï¿½ï¿½Ð¶ï¿½/ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò¸²¸ï¿½ï¿½ï¿½Ç°
+	 *    Ä¬ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¡ï¿½
+	 * 3. ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð¶Ï¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ÏµÈ¶ï¿½Ó¦ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ú¡ï¿½
+	 * 4. INT 0 - 31ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½ï¿½ï¿½
+	 *    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ì³£ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ï¿½ï¿½Í»Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
+	 *    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½ï¿½Ë¹ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
 	 */
 	for ( int i = 0; i <= 255; i++ )
 	{
@@ -60,7 +61,7 @@ void Machine::InitIDT()
 		 else
 			 this->GetIDT().SetInterruptGate(i, (unsigned long)IDT::DefaultInterruptHandler); 
 	}
-	/* ³õÊ¼»¯INT 0 - 31ºÅÒì³£ */
+	/* ï¿½ï¿½Ê¼ï¿½ï¿½INT 0 - 31ï¿½ï¿½ï¿½ì³£ */
 	this->GetIDT().SetTrapGate(0, (unsigned long)Exception::DivideErrorEntrance);
 	this->GetIDT().SetTrapGate(1, (unsigned long)Exception::DebugEntrance);
 	this->GetIDT().SetTrapGate(2, (unsigned long)Exception::NMIEntrance);
@@ -76,25 +77,27 @@ void Machine::InitIDT()
 	this->GetIDT().SetTrapGate(12,(unsigned long)Exception::StackSegmentErrorEntrance);
 	this->GetIDT().SetTrapGate(13,(unsigned long)Exception::GeneralProtectionEntrance);
 	
-	/* È±Ò³Òì³£(INT 14) UNIX V6++ÖÐ¶ÔÕû¸ö½ø³ÌÍ¼Ïñ»»Èë»»³ö£¬·ÇÒ³Ê½½»»»£¬Òò´Ë²»ÐèÒªÈ±Ò³Òì³£´¦Àíº¯Êý */
+	/* È±Ò³ï¿½ì³£(INT 14) UNIX V6++ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ë»»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ÒªÈ±Ò³ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetTrapGate(14,(unsigned long)Exception::PageFaultEntrance);
-	/* Intel±£ÁôÒì³£(INT 15)  Ê¹ÓÃIDT::DefaultExceptionHandler() */
+	/* Intelï¿½ï¿½ï¿½ï¿½ï¿½ì³£(INT 15)  Ê¹ï¿½ï¿½IDT::DefaultExceptionHandler() */
 	this->GetIDT().SetTrapGate(16,(unsigned long)Exception::CoprocessorErrorEntrance);
 	this->GetIDT().SetTrapGate(17,(unsigned long)Exception::AlignmentCheckEntrance);
 	this->GetIDT().SetTrapGate(18,(unsigned long)Exception::MachineCheckEntrance);
 	this->GetIDT().SetTrapGate(19,(unsigned long)Exception::SIMDExceptionEntrance);
 
-	/* INT 20 - 31ºÅÒì³£ÎªIntel±£ÁôÎ´Ê¹ÓÃµÄÒì³£ */
+	/* INT 20 - 31ï¿½ï¿½ï¿½ì³£ÎªIntelï¿½ï¿½ï¿½ï¿½Î´Ê¹ï¿½Ãµï¿½ï¿½ì³£ */
 
-	/* ÉèÖÃÊ±ÖÓÖÐ¶ÏµÄÖÐ¶ÏÃÅ */
+	/* ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð¶Ïµï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetInterruptGate(0x20, (unsigned long)Time::TimeInterruptEntrance);
-	/* ÉèÖÃ¼üÅÌÖÐ¶ÏµÄÖÐ¶ÏÃÅ */
+	/* ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½Ð¶Ïµï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetInterruptGate(0x21, (unsigned long)KeyboardInterrupt::KeyboardInterruptEntrance);
-	/* ÉèÖÃIDTÖÐ´ÅÅÌÖÐ¶Ï¶ÔÓ¦ÖÐ¶ÏÃÅ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ïµï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ (IRQ12) */
+	this->GetIDT().SetInterruptGate(0x2C, (unsigned long)MouseInterrupt::MouseInterruptEntrance);
+	/* ï¿½ï¿½ï¿½ï¿½IDTï¿½Ð´ï¿½ï¿½ï¿½ï¿½Ð¶Ï¶ï¿½Ó¦ï¿½Ð¶ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetInterruptGate(0x2E, (unsigned long)DiskInterrupt::DiskInterruptEntrance);
-	/* 0x80ºÅÖÐ¶ÏÏòÁ¿×÷ÎªÏµÍ³µ÷ÓÃ£¬ÉèÖÃÏµÍ³µ÷ÓÃ¶ÔÓ¦µÄÏÝÈëÃÅ */
+	/* 0x80ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÏµÍ³ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½Ã¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetTrapGate(0x80, (unsigned long)SystemCall::SystemCallEntrance);
-	/* 8259AÖ÷Æ¬µÄirq7Òý½Å»á²úÉúµÄÎ´ÖªÖÐ¶Ï£¬Ìá¹©ÖÐ¶Ï´¦Àíº¯Êý¡°ºöÂÔËü¡± */
+	/* 8259Aï¿½ï¿½Æ¬ï¿½ï¿½irq7ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´Öªï¿½Ð¶Ï£ï¿½ï¿½á¹©ï¿½Ð¶Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	this->GetIDT().SetInterruptGate(0x27, (unsigned long)MasterIRQ7);
 }
 
@@ -102,13 +105,13 @@ void Machine::InitGDT()
 {
 	this->m_GDT = &g_GDT;
 	
-	//³õÊ¼»¯GDTÖÐµÄ4¸ö¶Î£ºÄÚºË´úÂë¶Î¡¢ÄÚºËÊý¾Ý¶Î£¬ÓÃ»§´úÂë¶Î¡¢ÓÃ»§Êý¾Ý¶Î
+	//ï¿½ï¿½Ê¼ï¿½ï¿½GDTï¿½Ðµï¿½4ï¿½ï¿½ï¿½Î£ï¿½ï¿½ÚºË´ï¿½ï¿½ï¿½Î¡ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½Ý¶Î£ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Î¡ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½
 	//limit = 0xfffff, base = 0x00000000, G = 1 , D = 1(32bit), P =1, DPL = 00, S = 1, TYPE = 1010 (code segment read only) 
 	//limit = 0xfffff, base = 0x00000000, G = 1, D = 1(32bit), P =1, DPL = 00, S = 1, TYPE = 0010 (data segment write/read) 
 	//limit = 0xfffff, base = 0x00000000, G = 1 , D = 1(32bit), P =1, DPL = 11, S = 1, TYPE = 1010 (code segment read only) 
 	//limit = 0xfffff, base = 0x00000000, G = 1, D = 1(32bit), P =1, DPL = 11, S = 1, TYPE = 0010 (data segment write/read) 
 	
-	//TODO Ìí¼ÓÏàÓ¦µÄ¿É¶ÁµÄ³£Á¿£¬ÈçGDTConsts::GRANULARITY_4K...
+	//TODO ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä¿É¶ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GDTConsts::GRANULARITY_4K...
 	SegmentDescriptor tmpDescriptor; 
 	//0x08:00
 	tmpDescriptor.SetSegmentLimit(0xfffff);
@@ -154,7 +157,7 @@ void Machine::InitGDT()
 	tmpDescriptor.m_Type = 0x2;	
 	GetGDT().SetSegmentDescriptor(4, tmpDescriptor);
 
-	/* ³õÊ¼»¯TSS¶Î */
+	/* ï¿½ï¿½Ê¼ï¿½ï¿½TSSï¿½ï¿½ */
 	this->m_TaskStateSegment = &g_TaskStateSegment;
 	this->InitTaskStateSegment();
 }
@@ -163,35 +166,35 @@ void Machine::InitGDT()
 void Machine::InitPageDirectory()
 {
 	/* 
-	 * ÊµÏÖ²Ù×÷ÏµÍ³µÄÒ³±íÓ³Éä:
-	 * ÎïÀíÄÚ´æ0x00000000-0x00400000(0-4M)½«±»Ó³Éäµ½ÏßÐÔµØÖ·
-	 * 0x00000000-0x00400000 ºÍ 0xC0000000-0xC0400000
+	 * Êµï¿½Ö²ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½Ò³ï¿½ï¿½Ó³ï¿½ï¿½:
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½0x00000000-0x00400000(0-4M)ï¿½ï¿½ï¿½ï¿½Ó³ï¿½äµ½ï¿½ï¿½ï¿½Ôµï¿½Ö·
+	 * 0x00000000-0x00400000 ï¿½ï¿½ 0xC0000000-0xC0400000
 	 */
 	PageDirectory* pPageDirectory = (PageDirectory*)(PAGE_DIRECTORY_BASE_ADDRESS + KERNEL_SPACE_START_ADDRESS);
 	
-	/* ÌîÐ´Ò³Ä¿Â¼£¨0x200#Ò³±í£©µÄµÚ0Ïî£¬Ê¹ÏßÐÔµØÖ·0-4MÓ³Éäµ½ÎïÀíÄÚ´æ0-4M */
+	/* ï¿½ï¿½Ð´Ò³Ä¿Â¼ï¿½ï¿½0x200#Ò³ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½0ï¿½î£¬Ê¹ï¿½ï¿½ï¿½Ôµï¿½Ö·0-4MÓ³ï¿½äµ½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½0-4M */
 	/*
-	pPageDirectory->m_Entrys[0].m_UserSupervisor = 1;                   //ÓÃ»§Ì¬
+	pPageDirectory->m_Entrys[0].m_UserSupervisor = 1;                   //ï¿½Ã»ï¿½Ì¬
 	pPageDirectory->m_Entrys[0].m_Present = 1;
 	pPageDirectory->m_Entrys[0].m_ReadWriter = 1;
 	pPageDirectory->m_Entrys[0].m_PageTableBaseAddress = KERNEL_PAGE_TABLE_BASE_ADDRESS >> 12;
 	*/
 
-	/* ÌîÐ´Ò³Ä¿Â¼£¨0x200#£©Ò³±íµÄµÚ768Ïî£¬Ê¹ÏßÐÔµØÖ·0xC0000000-0xC0400000Ó³Éäµ½ÎïÀíÄÚ´æ0-4M¡£Î´À´ºËÐÄÌ¬¿Õ¼ä³ß´ç´óÓÚ4M×Ö½Ú£¬¼ÇµÃÕâÀïÒª¸Ä*/
+	/* ï¿½ï¿½Ð´Ò³Ä¿Â¼ï¿½ï¿½0x200#ï¿½ï¿½Ò³ï¿½ï¿½ï¿½Äµï¿½768ï¿½î£¬Ê¹ï¿½ï¿½ï¿½Ôµï¿½Ö·0xC0000000-0xC0400000Ó³ï¿½äµ½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½0-4Mï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½Õ¼ï¿½ß´ï¿½ï¿½ï¿½ï¿½4Mï¿½Ö½Ú£ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½*/
 	unsigned int kPageTableIdx = KERNEL_SPACE_START_ADDRESS / PageTable::SIZE_PER_PAGETABLE_MAP; 
-	pPageDirectory->m_Entrys[kPageTableIdx].m_UserSupervisor = 0;       // ºËÐÄÌ¬
+	pPageDirectory->m_Entrys[kPageTableIdx].m_UserSupervisor = 0;       // ï¿½ï¿½ï¿½ï¿½Ì¬
 	pPageDirectory->m_Entrys[kPageTableIdx].m_Present = 1;
 	pPageDirectory->m_Entrys[kPageTableIdx].m_ReadWriter = 1;
 	pPageDirectory->m_Entrys[kPageTableIdx].m_PageTableBaseAddress = KERNEL_PAGE_TABLE_BASE_ADDRESS >> 12;
 
 	/* 
-	 * ³õÊ¼»¯ºËÐÄÌ¬Ò³±í¡£ºËÐÄÌ¬Ò³±í±»´æ·ÅÔÚÎïÀíµØÖ·
-	 * 0x200000(2M)£¬Ëù¶ÔÓ¦ÏßÐÔµØÖ·ÔòÎª0xC0200000
+	 * ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+	 * 0x200000(2M)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Ôµï¿½Ö·ï¿½ï¿½Îª0xC0200000
 	 */
 	PageTable* pPageTable = (PageTable*)(KERNEL_PAGE_TABLE_BASE_ADDRESS + KERNEL_SPACE_START_ADDRESS);
 	/* 
-	 * Ê¹ÓÃÎïÀíÄÚ´æ0-4MÌîÐ´Ò³±íµÄ±íÏî£¬ÖÁ´ËÍê³ÉÎïÀíÄÚ´æ0-4M
-	 * Ó³Éäµ½¸ßÎ»0xC0000000-0xC0400000£¬¹©²Ù×÷ÏµÍ³ÄÚºËÊ¹ÓÃ¡£
+	 * Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½0-4Mï¿½ï¿½Ð´Ò³ï¿½ï¿½ï¿½Ä±ï¿½ï¿½î£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½0-4M
+	 * Ó³ï¿½äµ½ï¿½ï¿½Î»0xC0000000-0xC0400000ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Úºï¿½Ê¹ï¿½Ã¡ï¿½
 	 */
 	for ( unsigned int i = 0; i < PageTable::ENTRY_CNT_PER_PAGETABLE; i++ )
 	{
@@ -218,9 +221,9 @@ void Machine::InitUserPageTable()
 		pPageDirectory->m_Entrys[j].m_Present = 1;
 		pPageDirectory->m_Entrys[j].m_ReadWriter = 1;
 		/* 
-		 * Ò³Ä¿Â¼ÏîBaseAddress×Ö¶ÎÖÐ¼ÇÂ¼Ò³±íµÄÎïÀíÆðÊ¼µØÖ·£¬¶ø·ÇÏßÐÔµØÖ·¡£
-		 * Ò²¾ÍÊÇËµ£¬·ÖÒ³»úÖÆÖÐ¾­ÓÉÒ³Ä¿Â¼ÏîBaseAddress×Ö¶ÎÕÒÏÂÒ»¼¶Ò³±íÊÇ
-		 * ¸ù¾ÝÒ³±íµÄÎïÀíµØÖ·ÕÒµ½Ëü¡£·ÖÒ³»úÖÆµÄÔË×÷²»ÒÀÀµ·ÖÒ³»úÖÆµÄ±¾Éí--¶ÔÏßÐÔµØÖ·µÄ½âÎö¡£
+		 * Ò³Ä¿Â¼ï¿½ï¿½BaseAddressï¿½Ö¶ï¿½ï¿½Ð¼ï¿½Â¼Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ö·ï¿½ï¿½
+		 * Ò²ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½ï¿½ï¿½Ò³Ä¿Â¼ï¿½ï¿½BaseAddressï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½
+		 * ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ÆµÄ±ï¿½ï¿½ï¿½--ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ö·ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½
 		 */
 		pPageDirectory->m_Entrys[j].m_PageTableBaseAddress = idx;
 		
@@ -248,23 +251,23 @@ void Machine::InitTaskStateSegment()
 	tss.m_EBP = 0xC0400000;
 	tss.m_ESP = 0xC0400000;
 	tss.m_EIP = 0xC0000000;	//runtime
-	tss.m_EFLAGS = 0x200;	/* ½ö½öenable IF Î» */
+	tss.m_EFLAGS = 0x200;	/* ï¿½ï¿½ï¿½ï¿½enable IF Î» */
 	tss.m_SS0 = Machine::KERNEL_DATA_SEGMENT_SELECTOR;
-	tss.m_ESP0 = 0xC0400000;	/* ºËÐÄÌ¬µØÖ·¿Õ¼äÄ©Î²×÷ÎªÕ»µ× */
+	tss.m_ESP0 = 0xC0400000;	/* ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½Ö·ï¿½Õ¼ï¿½Ä©Î²ï¿½ï¿½ÎªÕ»ï¿½ï¿½ */
 
 	/* 
-	 * ½«GDT±íµÄµÚ5Ïî(Machine::TASK_STATE_SEGMENT_IDX)Ö¸ÏòTSS¶Î¡£
+	 * ï¿½ï¿½GDTï¿½ï¿½ï¿½Äµï¿½5ï¿½ï¿½(Machine::TASK_STATE_SEGMENT_IDX)Ö¸ï¿½ï¿½TSSï¿½Î¡ï¿½
 	 * 
-	 * ÓÉÓÚGDT±»³éÏó³ÉSegmentDescriptorÊý×é£¬ËùÒÔÃ»ÓÐ¶ÔTSS¶Î
-	 * ÃèÊö·ûµÄ³éÏó£¬Òò´ËÐèÒª½«TaskStateSegmentDescriptorÇ¿×ª£¬
-	 * ÒÔ½øÐÐ±ØÒªµÄÉèÖÃ¡£
+	 * ï¿½ï¿½ï¿½ï¿½GDTï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SegmentDescriptorï¿½ï¿½ï¿½é£¬ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð¶ï¿½TSSï¿½ï¿½
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½TaskStateSegmentDescriptorÇ¿×ªï¿½ï¿½
+	 * ï¿½Ô½ï¿½ï¿½Ð±ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½
 	 */
 	TaskStateSegmentDescriptor* p_TSSDescriptor = 
 		(TaskStateSegmentDescriptor*)(&(GetGDT().GetSegmentDescriptor(Machine::TASK_STATE_SEGMENT_IDX)));
 	p_TSSDescriptor->SetSegmengLimit(0x68 - 1);
 	p_TSSDescriptor->SetBaseAddress((unsigned long)&g_TaskStateSegment);
 	p_TSSDescriptor->m_Granularity = 1;
-	p_TSSDescriptor->m_Type = 0x9; //µÚÈýÎ»ÎªbusyÎ»£¬ÉèÖÃÎª0
+	p_TSSDescriptor->m_Type = 0x9; //ï¿½ï¿½ï¿½ï¿½Î»ÎªbusyÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0
 	p_TSSDescriptor->m_Present = 0x1;
 	p_TSSDescriptor->m_Available = 0x1;
 	p_TSSDescriptor->m_DescriptorPrivilegeLevel = 0x00;
@@ -272,13 +275,13 @@ void Machine::InitTaskStateSegment()
 void Machine::EnablePageProtection()
 {
 	/* 
-	 * pageDirBaseAddrÊÇÔÚ¸ßÎ»ÄÚºË¿Õ¼äµÄÏßÐÔµØÖ·£¬ÐèÒª×ª»»ÎªÎïÀíµØÖ·¡£
+	 * pageDirBaseAddrï¿½ï¿½ï¿½Ú¸ï¿½Î»ï¿½ÚºË¿Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ö·ï¿½ï¿½ï¿½ï¿½Òª×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½
 	 * PhysicalAddress = LinearAddress - 0xC0000000
 	 */
 	unsigned int pageDirBaseAddr = (unsigned int)(&GetPageDirectory());
 	unsigned int pageDirPhyBaseAddr = pageDirBaseAddr - Machine::KERNEL_SPACE_START_ADDRESS;
 	
-	/* ¼Ä´æÆ÷CR3ÖÐÐ´ÈëÒ³Ä¿Â¼ÆðÊ¼ÎïÀíµØÖ·£¬CR0µÄPGÎ»ÖÃ1£¬¿ªÆô·ÖÒ³»úÖÆ */
+	/* ï¿½Ä´ï¿½ï¿½ï¿½CR3ï¿½ï¿½Ð´ï¿½ï¿½Ò³Ä¿Â¼ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½CR0ï¿½ï¿½PGÎ»ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ */
 	__asm__ __volatile__("	movl %0, %%cr3;		\
 							movl %%cr0, %%eax;	\
 							orl $0x80000000, %%eax;	\

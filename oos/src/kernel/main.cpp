@@ -1,4 +1,4 @@
-/* ÄÚºËµÄ³õÊ¼»¯ */
+/* ï¿½ÚºËµÄ³ï¿½Ê¼ï¿½ï¿½ */
 
 #include "Video.h"
 #include "Simple.h"
@@ -21,6 +21,7 @@
 #include "TimeInterrupt.h"
 #include "PEParser.h"
 #include "CMOSTime.h"
+#include "Mouse.h"
 #include "..\test\TestInclude.h"
 
 bool isInit = false;
@@ -31,9 +32,9 @@ extern "C" void MasterIRQ7()
 	
 	Diagnose::Write("IRQ7 from Master 8259A!\n");
 	
-	//ÐèÒªÔÚÖÐ¶Ï´¦Àí³ÌÐòÄ©Î²ÏÈ8259A·¢ËÍEOIÃüÁî
-	//ÊµÑé·¢ÏÖ£ºÓÐÃ»ÓÐÏÂÃæIOPort::OutByte(0x27, 0x20);Õâ¾äÔËÐÐÐ§¹û¶¼Ò»Ñù£¬±¾À´ÒÔÎª
-	//·¢ËÍEOIÃüÁîÖ®ºó»áÓÐºóÐøµÄIRQ7ÖÐ¶Ï½øÈë£¬ µ«ÊÔÏÂÀ´½á¹ûÊÇIRQ7Ö»»á²úÉúÒ»´Î¡£
+	//ï¿½ï¿½Òªï¿½ï¿½ï¿½Ð¶Ï´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä©Î²ï¿½ï¿½8259Aï¿½ï¿½ï¿½ï¿½EOIï¿½ï¿½ï¿½ï¿½
+	//Êµï¿½é·¢ï¿½Ö£ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IOPort::OutByte(0x27, 0x20);ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª
+	//ï¿½ï¿½ï¿½ï¿½EOIï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½IRQ7ï¿½Ð¶Ï½ï¿½ï¿½ë£¬ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IRQ7Ö»ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Î¡ï¿½
 	IOPort::OutByte(Chip8259A::MASTER_IO_PORT_1, Chip8259A::EOI);
 
 	RestoreContext();
@@ -50,7 +51,7 @@ extern "C" int main0(void)
 	Chip8259A::Init();
 	Chip8259A::IrqEnable(Chip8259A::IRQ_SLAVE);
 
-	Chip8253::Init(60);	//³õÊ¼»¯Ê±ÖÓÖÐ¶ÏÐ¾Æ¬
+	Chip8253::Init(60);	//ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð¶ï¿½Ð¾Æ¬
 	Chip8259A::IrqEnable(Chip8259A::IRQ_TIMER);
 
 	Chip8259A::IrqEnable(Chip8259A::IRQ_KBD);
@@ -58,7 +59,11 @@ extern "C" int main0(void)
 	DMA::Init();
 	Chip8259A::IrqEnable(Chip8259A::IRQ_IDE);
 
-	// Chip8253::Init(20);	//³õÊ¼»¯Ê±ÖÓÖÐ¶ÏÐ¾Æ¬
+	/* åˆå§‹åŒ–é¼ æ ‡é©±åŠ¨ */
+	Mouse::Initialize();
+	Chip8259A::IrqEnable(Chip8259A::IRQ_MOUSE);
+
+	// Chip8253::Init(20);	//ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð¶ï¿½Ð¾Æ¬
 	// Chip8259A::Init();
 	// Chip8259A::IrqEnable(Chip8259A::IRQ_TIMER);
 	// DMA::Init();
@@ -74,18 +79,18 @@ extern "C" int main0(void)
 	machine.InitIDT();	
 	machine.LoadIDT();
 
-	machine.InitPageDirectory();    // ³õÊ¼»¯Ò³Ä¿Â¼¡¢ºËÐÄÌ¬Ò³±í
-	machine.InitUserPageTable();     // ³õÊ¼»¯ÓÃ»§Ì¬Ò³±í
-	machine.EnablePageProtection();    //¿ªÆô·ÖÒ³Ä£Ê½
+	machine.InitPageDirectory();    // ï¿½ï¿½Ê¼ï¿½ï¿½Ò³Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬Ò³ï¿½ï¿½
+	machine.InitUserPageTable();     // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ã»ï¿½Ì¬Ò³ï¿½ï¿½
+	machine.EnablePageProtection();    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³Ä£Ê½
 
-	/* ÒÔÉÏ£¬InitUserPageTable()½«ÏßÐÔµØÖ·0-8MÓ³Éäµ½ÎïÀíÄÚ´æ
-	 * ÆäÖÐ0-4MÊÇÎª±£Ö¤´Ë×¢ÊÍÒÔÏÂÖÁ±¾º¯Êý½áÎ²µÄ´úÂëÕýÈ·Ö´ÐÐ£¡
+	/* ï¿½ï¿½ï¿½Ï£ï¿½InitUserPageTable()ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ö·0-8MÓ³ï¿½äµ½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½
+	 * ï¿½ï¿½ï¿½ï¿½0-4Mï¿½ï¿½Îªï¿½ï¿½Ö¤ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½È·Ö´ï¿½Ð£ï¿½
 	 *
-	 * ÕâÊÇÒòÎªÄ¿Ç°£¬³ýÁËCSÊÇÄÚºË³õÊ¼»¯½×¶ÎµÄ¶ÎÑ¡Ôñ×Ó£¬ÆäÓà¶Î¼Ä´æÆ÷È«ÊÇbootÊ¹ÓÃµÄ¶ÎÑ¡Ôñ×Ó£¬ÓÈÆäÊÇSS¡£
-	 * ·Ö¶Îµ¥Ôª¸ø³öµÄÏßÐÔµØÖ·ÊÇ[0,4M)¡£¿ªÆô·ÖÒ³Ä£Ê½ºó£¬Ò»¶¨ÒªÓÐÕâ¶Î¿Õ¼äµÄÓ³Éä¹ØÏµ£¬·ñÔò£¬Í¨²»¹ý£¨¾ßÌå¶øÑÔ£¬ÊÇCº¯ÊýEnablePageProtection()µÄµÄ¾Ö²¿±äÁ¿ºÍ·µ»ØµØÖ·Ð¡ÓÚ4M£¬Ã»ÓÐÓ³Éä»á¶Î´íÎó£©¡£
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÄ¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CSï¿½ï¿½ï¿½ÚºË³ï¿½Ê¼ï¿½ï¿½ï¿½×¶ÎµÄ¶ï¿½Ñ¡ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½È«ï¿½ï¿½bootÊ¹ï¿½ÃµÄ¶ï¿½Ñ¡ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SSï¿½ï¿½
+	 * ï¿½Ö¶Îµï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ö·ï¿½ï¿½[0,4M)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³Ä£Ê½ï¿½ï¿½Ò»ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Î¿Õ¼ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½EnablePageProtection()ï¿½ÄµÄ¾Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Øµï¿½Ö·Ð¡ï¿½ï¿½4Mï¿½ï¿½Ã»ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Î´ï¿½ï¿½ó£©¡ï¿½
 	 */
 
-	//Ê¹ÓÃ0x10¶Î¼Ä´æÆ÷
+	//Ê¹ï¿½ï¿½0x10ï¿½Î¼Ä´ï¿½ï¿½ï¿½
 	__asm__ __volatile__
 		(" \
 		mov $0x10, %ax\n\t \
@@ -94,7 +99,7 @@ extern "C" int main0(void)
 		mov %ax, %es\n\t"
 		);
 
-	//½«³õÊ¼»¯¶ÑÕ»ÉèÖÃÎª0xc0400000£¬ÕâÀïÆÆ»µÁË·â×°ÐÔ£¬¿¼ÂÇÊ¹ÓÃ¸üºÃµÄ·½·¨
+	//ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½Îª0xc0400000ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½Ë·ï¿½×°ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¸ï¿½ï¿½ÃµÄ·ï¿½ï¿½ï¿½
 	__asm__ __volatile__
 		(
 		" \
@@ -105,14 +110,14 @@ extern "C" int main0(void)
 	
 }
 
-/* Ó¦ÓÃ³ÌÐò´Ómain·µ»Ø£¬½ø³Ì¾ÍÖÕÖ¹ÁË£¬ÕâÈ«ÊÇruntime()µÄ¹¦ÀÍ¡£Ã»ÓÐËü£¬¾ÍÖ»ÄÜÓÃexitÖÕÖ¹½ø³ÌÁË¡£xV6Ã»Õâ¸ö¹¦ÄÜ^-^ */
+/* Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½mainï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½Ö¹ï¿½Ë£ï¿½ï¿½ï¿½È«ï¿½ï¿½runtime()ï¿½Ä¹ï¿½ï¿½Í¡ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½exitï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½Ë¡ï¿½xV6Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½^-^ */
 extern "C" void runtime()
 {
 	/*
-	1. Ïú»ÙruntimeµÄstack Frame
-	2. espÖÐÖ¸ÏòÓÃ»§Õ»ÖÐargcÎ»ÖÃ£¬¶øebpÉÐÎ´ÕýÈ·³õÊ¼»¯
-	3. eaxÖÐ´æ·Å¿ÉÖ´ÐÐ³ÌÐòEntryPoint
-	4~6. exit(0)½áÊø½ø³Ì
+	1. ï¿½ï¿½ï¿½ï¿½runtimeï¿½ï¿½stack Frame
+	2. espï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ã»ï¿½Õ»ï¿½ï¿½argcÎ»ï¿½Ã£ï¿½ï¿½ï¿½ebpï¿½ï¿½Î´ï¿½ï¿½È·ï¿½ï¿½Ê¼ï¿½ï¿½
+	3. eaxï¿½Ð´ï¿½Å¿ï¿½Ö´ï¿½Ð³ï¿½ï¿½ï¿½EntryPoint
+	4~6. exit(0)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	*/
 	__asm__ __volatile__("	leave;	\
 							movl %%esp, %%ebp;	\
@@ -123,8 +128,8 @@ extern "C" void runtime()
 }
 
 /*
-  * 1#½ø³ÌÔÚÖ´ÐÐÍêMoveToUserStack()´Óring0ÍË³öµ½ring3ÓÅÏÈ¼¶ºó£¬»áµ÷ÓÃExecShell()£¬´Ëº¯ÊýÍ¨¹ý"int $0x80"
-  * (EAX=execvÏµÍ³µ÷ÓÃºÅ)¼ÓÔØ¡°/Shell.exe¡±³ÌÐò£¬Æä¹¦ÄÜÏàµ±ÓÚÔÚÓÃ»§³ÌÐòÖÐÖ´ÐÐÏµÍ³µ÷ÓÃexecv(char* pathname, char* argv[])¡£
+  * 1#ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½MoveToUserStack()ï¿½ï¿½ring0ï¿½Ë³ï¿½ï¿½ï¿½ring3ï¿½ï¿½ï¿½È¼ï¿½ï¿½ó£¬»ï¿½ï¿½ï¿½ï¿½ExecShell()ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½Í¨ï¿½ï¿½"int $0x80"
+  * (EAX=execvÏµÍ³ï¿½ï¿½ï¿½Ãºï¿½)ï¿½ï¿½ï¿½Ø¡ï¿½/Shell.exeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä¹¦ï¿½ï¿½ï¿½àµ±ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½execv(char* pathname, char* argv[])ï¿½ï¿½
   */
 extern "C" void ExecShell()
 {
@@ -135,7 +140,7 @@ extern "C" void ExecShell()
 	return;
 }
 
-/* ´Ëº¯ÊýtestÎÄ¼þ¼ÐÖÐµÄ´úÂë»áÒýÓÃ£¬µ«Ã²ËÆ¿ÉÒÔÉ¾³ý£¬¼ÇµÃ°ÑËüÉ¾µô*/
+/* ï¿½Ëºï¿½ï¿½ï¿½testï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ÐµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½Ã²ï¿½Æ¿ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ÇµÃ°ï¿½ï¿½ï¿½É¾ï¿½ï¿½*/
 extern "C" void Delay()
 {
 	for ( int i = 0; i < 50; i++ )
@@ -150,33 +155,33 @@ extern "C" void Delay()
 
 extern "C" void next()
 {
-	//Õâ¸öÊ±ºò0M-4MµÄÄÚ´æÓ³ÉäÒÑ¾­²»±»Ê¹ÓÃÁË£¬ËùÒÔÒªÖØÐÂÓ³ÉäÓÃ»§Ì¬µÄÒ³±í£¬ÎªÓÃ»§Ì¬³ÌÐòÔËÐÐ×öºÃ×¼±¸
+	//ï¿½ï¿½ï¿½Ê±ï¿½ï¿½0M-4Mï¿½ï¿½ï¿½Ú´ï¿½Ó³ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Ã»ï¿½Ì¬ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Îªï¿½Ã»ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½
 	//Machine::Instance().InitUserPageTable();
 	//FlushPageDirectory();
 
 	Machine::Instance().LoadTaskRegister();
 	
-	/* »ñÈ¡CMOSµ±Ç°Ê±¼ä£¬ÉèÖÃÏµÍ³Ê±ÖÓ */
+	/* ï¿½ï¿½È¡CMOSï¿½ï¿½Ç°Ê±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½ */
 	struct SystemTime cTime;
 	CMOSTime::ReadCMOSTime(&cTime);
-	/* MakeKernelTime()¼ÆËã³öÄÚºËÊ±¼ä£¬´Ó1970Äê1ÔÂ1ÈÕ0Ê±ÖÁµ±Ç°µÄÃëÊý */
+	/* MakeKernelTime()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½Ê±ï¿½ä£¬ï¿½ï¿½1970ï¿½ï¿½1ï¿½ï¿½1ï¿½ï¿½0Ê±ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	Time::time = Utility::MakeKernelTime(&cTime);
 
-	/* ´ÓCMOSÖÐ»ñÈ¡ÎïÀíÄÚ´æ´óÐ¡ */
+	/* ï¿½ï¿½CMOSï¿½Ð»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ð¡ */
 	unsigned short memSize = 0;	/* size in KB */
 	unsigned char lowMem, highMem;
 
-	/* ÕâÀïÖ»ÊÇ½èÓÃCMOSTimeÀàÖÐµÄReadCMOSByteº¯Êý¶ÁÈ¡CMOSÖÐÎïÀíÄÚ´æ´óÐ¡ÐÅÏ¢ */
+	/* ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ç½ï¿½ï¿½ï¿½CMOSTimeï¿½ï¿½ï¿½Ðµï¿½ReadCMOSByteï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡CMOSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ð¡ï¿½ï¿½Ï¢ */
 	lowMem = CMOSTime::ReadCMOSByte(CMOSTime::EXTENDED_MEMORY_ABOVE_1MB_LOW);
 	highMem = CMOSTime::ReadCMOSByte(CMOSTime::EXTENDED_MEMORY_ABOVE_1MB_HIGH);
 	memSize = (highMem << 8) + lowMem;
 
-	/* ¼ÓÉÏ1MBÒÔÏÂÎïÀíÄÚ´æÇøÓò£¬¼ÆËã×ÜÄÚ´æÈÝÁ¿£¬ÒÔ×Ö½ÚÎªµ¥Î»µÄÄÚ´æ´óÐ¡ */
+	/* ï¿½ï¿½ï¿½ï¿½1MBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ò£¬¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½Îªï¿½ï¿½Î»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ð¡ */
 	memSize += 1024; /* KB */
 	PageManager::PHY_MEM_SIZE = memSize * 1024;
 	UserPageManager::USER_PAGE_POOL_SIZE = PageManager::PHY_MEM_SIZE - UserPageManager::USER_PAGE_POOL_START_ADDR;
 
-	/* ÕæÕý²Ù×÷ÏµÍ³ÄÚºË³õÊ¼»¯Âß¼­	 */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ÚºË³ï¿½Ê¼ï¿½ï¿½ï¿½ß¼ï¿½	 */
 	Kernel::Instance().Initialize();	
 	Kernel::Instance().GetProcessManager().SetupProcessZero();
 	isInit = true;
@@ -186,7 +191,7 @@ extern "C" void next()
 
 	Diagnose::Write("test \n");
 
-	/*  ³õÊ¼»¯rootDirInodeºÍÓÃ»§µ±Ç°¹¤×÷Ä¿Â¼£¬ÒÔ±ãNameI()Õý³£¹¤×÷ */
+	/*  ï¿½ï¿½Ê¼ï¿½ï¿½rootDirInodeï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½Ô±ï¿½NameI()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	FileManager& fileMgr = Kernel::Instance().GetFileManager();
 
 	//fileMgr.rootDirInode = g_InodeTable.IGet(DeviceManager::ROOTDEV, FileSystem::ROOTINO);
@@ -199,7 +204,7 @@ extern "C" void next()
 	us.u_cdir->i_flag &= (~Inode::ILOCK);
 	Utility::StringCopy("/", us.u_curdir);
 
-	/* ´ò¿ªTTyÉè±¸ */
+	/* ï¿½ï¿½TTyï¿½è±¸ */
 	int fd_tty = lib_open("/dev/tty1", File::FREAD);
 
 	if ( fd_tty != 0 )
@@ -223,22 +228,22 @@ extern "C" void next()
 
     //us.u_MemoryDescriptor.Release();
 
-	int pid = Kernel::Instance().GetProcessManager().NewProc();         /* 0#½ø³Ì´´½¨1#½ø³Ì */
-	if( 0 == pid )     /* 0#½ø³ÌÖ´ÐÐSched()£¬³ÉÎªÏµÍ³ÖÐÓÀÔ¶ÔËÐÐÔÚºËÐÄÌ¬µÄÎ¨Ò»½ø³Ì  */
+	int pid = Kernel::Instance().GetProcessManager().NewProc();         /* 0#ï¿½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½1#ï¿½ï¿½ï¿½ï¿½ */
+	if( 0 == pid )     /* 0#ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Sched()ï¿½ï¿½ï¿½ï¿½ÎªÏµÍ³ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½Ì¬ï¿½ï¿½Î¨Ò»ï¿½ï¿½ï¿½ï¿½  */
 	{
 		us.u_procp->p_ttyp = NULL;
 		Kernel::Instance().GetProcessManager().Sched();
 	}
-	else               /* 1#½ø³ÌÖ´ÐÐÓ¦ÓÃ³ÌÐòshell.exe,ÊÇÆÕÍ¨½ø³Ì  */
+	else               /* 1#ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½shell.exe,ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½  */
 	{
-		Machine::Instance().InitUserPageTable();      //ÕâÊÇÖ±½ÓÐ´0x202,0x203Ò³±í£¬Ã»Ïà¶ÔÐéÊµµØÖ·Ó³Éä±íÒ»Ñùokay£¡
+		Machine::Instance().InitUserPageTable();      //ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ð´0x202,0x203Ò³ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½Ö·Ó³ï¿½ï¿½ï¿½Ò»ï¿½ï¿½okayï¿½ï¿½
 		FlushPageDirectory();
 
 		CRT::ClearScreen();
 
-		/* 1#½ø³Ì»ØÓÃ»§Ì¬£¬Ö´ÐÐexec("shell.exe")ÏµÍ³µ÷ÓÃ*/
+		/* 1#ï¿½ï¿½ï¿½Ì»ï¿½ï¿½Ã»ï¿½Ì¬ï¿½ï¿½Ö´ï¿½ï¿½exec("shell.exe")ÏµÍ³ï¿½ï¿½ï¿½ï¿½*/
 		MoveToUserStack();
-		__asm__ __volatile__ ("call *%%eax" :: "a"((unsigned long)ExecShell - 0xC0000000));   //Òª·ÃÎÊÓÃ»§Õ»£¬ËùÒÔÒ»¶¨ÒªÓÐÓ³Éä£¡
+		__asm__ __volatile__ ("call *%%eax" :: "a"((unsigned long)ExecShell - 0xC0000000));   //Òªï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Òªï¿½ï¿½Ó³ï¿½ä£¡
 	}
 }
 
