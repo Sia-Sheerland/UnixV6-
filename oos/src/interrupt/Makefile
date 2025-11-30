@@ -3,7 +3,7 @@ include ..\Makefile.inc
 TARGET = ..\..\targets\objs
 
 all		:	$(TARGET)\exception.o $(TARGET)\systemcall.o $(TARGET)\diskinterrupt.o \
-			$(TARGET)\keyboardinterrupt.o $(TARGET)\timeinterrupt.o
+			$(TARGET)\keyboardinterrupt.o $(TARGET)\timeinterrupt.o $(TARGET)\mouseinterrupt.o
 			
 			
 $(TARGET)\exception.o	:	Exception.cpp $(INCLUDE)\Exception.h
@@ -20,4 +20,6 @@ $(TARGET)\keyboardinterrupt.o	:	KeyboardInterrupt.cpp $(INCLUDE)\KeyboardInterru
 	
 $(TARGET)\timeinterrupt.o	:	TimeInterrupt.cpp $(INCLUDE)\TimeInterrupt.h
 	$(CC) $(CFLAGS) -I"$(INCLUDE)" -c $< -o $@
-	
+
+$(TARGET)\mouseinterrupt.o	:	MouseInterrupt.cpp $(INCLUDE)\MouseInterrupt.h
+	$(CC) $(CFLAGS) -I"$(INCLUDE)" -c $< -o $@
