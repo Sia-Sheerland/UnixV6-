@@ -2,64 +2,65 @@
 #define CHIP8259A_H
 
 /*
- * ¶¨ÒåÁË¶Ô8259A¿É±àÖÐ¶Ï¿ØÖÆÐ¾Æ¬(PIC)µÄ²Ù×÷¡£
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½8259Aï¿½É±ï¿½ï¿½Ð¶Ï¿ï¿½ï¿½ï¿½Ð¾Æ¬(PIC)ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½
  * 
- * 8259AÐ¾Æ¬°ïÖúCPU´úÎª¹ÜÀíÍâÉèÌá³öµÄÖÐ¶ÏÇëÇó,
- * Ñ¡ÔñÓÅÏÈ¼¶×î¸ßµÄÖÐ¶Ï,×ª´ï¸øCPUÀ´ÏìÓ¦ÖÐ¶Ï¡£
+ * 8259AÐ¾Æ¬ï¿½ï¿½ï¿½ï¿½CPUï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½,
+ * Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ßµï¿½ï¿½Ð¶ï¿½,×ªï¿½ï¿½ï¿½CPUï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ð¶Ï¡ï¿½
  */
 
 class Chip8259A
 {
 public:
-	/* ³õÊ¼»¯ÏµÍ³ÖÐµÄÖ÷¡¢´ÓÁ½Æ¬8259AÖÐ¶Ï¿ØÖÆÐ¾Æ¬ */
+	/* ï¿½ï¿½Ê¼ï¿½ï¿½ÏµÍ³ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬8259Aï¿½Ð¶Ï¿ï¿½ï¿½ï¿½Ð¾Æ¬ */
 	static void Init();
 	
-	/* ¿ªÆôÖÐ¶Ïº¯Êý¡£
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ïºï¿½ï¿½ï¿½ï¿½ï¿½
 	 *    
-	 * ¹¦ÄÜ£ºÍ¨¹ýÉèÖÃ8259AµÄÖÐ¶ÏÆÁ±Î¼Ä´æÆ÷£¬½«ÏàÓ¦
-	 * ÖÐ¶ÏÆÁ±ÎÎ»Çå0£¬ÔÊÐíÀ´×ÔÌØ¶¨ÍâÉèµÄÖÐ¶Ï¡£
+	 * ï¿½ï¿½ï¿½Ü£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8259Aï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
+	 * ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï¡ï¿½
 	 * 
-	 * ÊäÈë²ÎÊý£ºÌØ¶¨ÍâÉèµÄIRQºÅ¡£ÈçÏÂÃæ¶¨ÒåµÄ: IRQ_TIMER = 0;µÈ
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IRQï¿½Å¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¶¨ï¿½ï¿½ï¿½: IRQ_TIMER = 0;ï¿½ï¿½
 	 */
 	static void IrqEnable(unsigned int irq);
 	
-	/* ÆÁ±ÎÖÐ¶Ïº¯Êý¡£ ºÍIrqEnable(unsigned int irq)Ö´ÐÐ·´Ïò¹¦ÄÜ¡£
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ïºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½IrqEnable(unsigned int irq)Ö´ï¿½Ð·ï¿½ï¿½ï¿½ï¿½Ü¡ï¿½
 	 * 
-	 * ¹¦ÄÜ£ºÍ¨¹ýÉèÖÃ8259AµÄÖÐ¶ÏÆÁ±Î¼Ä´æÆ÷£¬½«ÏàÓ¦
-	 * ÖÐ¶ÏÆÁ±ÎÎ»ÖÃ1£¬ÆÁ±ÎÀ´×ÔÌØ¶¨ÍâÉèµÄÖÐ¶Ï¡£
+	 * ï¿½ï¿½ï¿½Ü£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8259Aï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
+	 * ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï¡ï¿½
 	 * 
-	 * ÊäÈë²ÎÊý£ºÌØ¶¨ÍâÉèµÄIRQºÅ¡£ÈçÏÂÃæ¶¨ÒåµÄ: IRQ_TIMER = 0; µÈ
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IRQï¿½Å¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¶¨ï¿½ï¿½ï¿½: IRQ_TIMER = 0; ï¿½ï¿½
 	 */
 	static void IrqDisable(unsigned int irq);
 	
 public:
-	/* ÏµÍ³ÖÐÓÐ2Æ¬8259AÐ¾Æ¬£¬Ã¿Ò»Æ¬ÔÚIOµØÖ·¿Õ¼äÖÐÕ¼ÓÃ2¸ö¶Ë¿ÚµØÖ· */
-	/* Ö÷Æ¬(Master)µÄIO¶Ë¿ÚµØÖ· */
+	/* ÏµÍ³ï¿½ï¿½ï¿½ï¿½2Æ¬8259AÐ¾Æ¬ï¿½ï¿½Ã¿Ò»Æ¬ï¿½ï¿½IOï¿½ï¿½Ö·ï¿½Õ¼ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½2ï¿½ï¿½ï¿½Ë¿Úµï¿½Ö· */
+	/* ï¿½ï¿½Æ¬(Master)ï¿½ï¿½IOï¿½Ë¿Úµï¿½Ö· */
 	static const unsigned short MASTER_IO_PORT_1 = 0x20;
 	static const unsigned short MASTER_IO_PORT_2 = 0x21;
 	
-	/* ´ÓÆ¬(Slave)µÄIO¶Ë¿ÚµØÖ· */
+	/* ï¿½ï¿½Æ¬(Slave)ï¿½ï¿½IOï¿½Ë¿Úµï¿½Ö· */
 	static const unsigned short SLAVE_IO_PORT_1 = 0xA0;
 	static const unsigned short SLAVE_IO_PORT_2 = 0xA1;
 	
-	/* Ö÷Æ¬¸÷Òý½Å¶ÔÓ¦ÆðÊ¼ÖÐ¶ÏºÅ */
+	/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½Ó¦ï¿½ï¿½Ê¼ï¿½Ð¶Ïºï¿½ */
 	static const unsigned char MASTER_IRQ_START = 0x20;
-	/* ´ÓÆ¬¸÷Òý½Å¶ÔÓ¦ÆðÊ¼ÖÐ¶ÏºÅ,ÖÐ¶ÏºÅ·¶Î§ÆðÊ¼0x28 */
+	/* ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½Ó¦ï¿½ï¿½Ê¼ï¿½Ð¶Ïºï¿½,ï¿½Ð¶ÏºÅ·ï¿½Î§ï¿½ï¿½Ê¼0x28 */
 	static const unsigned char SLAVE_IRQ_START = MASTER_IRQ_START + 8;	
 	
 	/* 
-	 * Ö÷Æ¬(IR0~IR7)Á¬½Óµ½µÄÍâÉè¶ÔÓ¦µÄÖÐ¶ÏÇëÇóÒý½Å (ÕâÀïÖ»¶¨ÒåÄÚºËÖÐ
-	 * ÓÃµ½µÄÍâÉè)ºóÃæ¿ÉÒÔÓÐÑ¡ÔñÐÔµØ ÆôÓÃ/½ûÓÃÀ´×ÔÓÚ¸ÃÒý½ÅµÄÖÐ¶Ï¡£
+	 * ï¿½ï¿½Æ¬(IR0~IR7)ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½
+	 * ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ôµï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½Ð¶Ï¡ï¿½
 	 */
-	static const unsigned int IRQ_TIMER = 0;	/* Ê±ÖÓÖÐ¶Ï(IRQ0)·¢ËÍµ½IR0Òý½Å */
-	static const unsigned int IRQ_KBD	= 1;	/* ¼üÅÌÖÐ¶Ï(IRQ1)·¢ËÍµ½IR1Òý½Å */
-	static const unsigned int IRQ_SLAVE = 2;	/* ¼¶ÁªÄ£Ê½ÏÂ,´ÓÆ¬·¢³öµÄÖÐ¶Ï(SlaveµÄINTÒý½Å),·¢ËÍµ½Ö÷Æ¬µÄIR2 */
+	static const unsigned int IRQ_TIMER = 0;	/* Ê±ï¿½ï¿½ï¿½Ð¶ï¿½(IRQ0)ï¿½ï¿½ï¿½Íµï¿½IR0ï¿½ï¿½ï¿½ï¿½ */
+	static const unsigned int IRQ_KBD	= 1;	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½(IRQ1)ï¿½ï¿½ï¿½Íµï¿½IR1ï¿½ï¿½ï¿½ï¿½ */
+	static const unsigned int IRQ_SLAVE = 2;	/* ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½,ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½(Slaveï¿½ï¿½INTï¿½ï¿½ï¿½ï¿½),ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Æ¬ï¿½ï¿½IR2 */
+
+	/* ï¿½ï¿½Æ¬(IR0~IR7)ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ */
+	static const unsigned int IRQ_MOUSE	= 12;	/* é¼ æ ‡ä¸­æ–­(IRQ12)è¿žæŽ¥åˆ°ä»Žç‰‡IR4å¼•è„š */
+	static const unsigned int IRQ_IDE	= 14;	/* Ó²ï¿½ï¿½ï¿½Ð¶ï¿½(IRQ14)ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Æ¬IR6ï¿½ï¿½ï¿½ï¿½ */
 	
-	/* ´ÓÆ¬(IR0~IR7)Á¬½Óµ½µÄÍâÉè¶ÔÓ¦µÄÖÐ¶ÏÇëÇóÒý½Å,ÕâÀïÖ»ÓÃµ½µÄÍâÉèÊÇÓ²ÅÌ */
-	static const unsigned int IRQ_IDE	= 14;	/* Ó²ÅÌÖÐ¶Ï(IRQ14)·¢ËÍµ½´ÓÆ¬IR6Òý½Å */
-	
-	/* ÁíÍâÐèÒª¶¨ÒåµÄÒ»Ð©³£Á¿ */
-	static const unsigned char MASK_ALL = 0xFF;	/* ÆÁ±Î×´Ì¬×Ö, ÆÁ±ÎËùÓÐÒý½Å(IR0~IR7)ÉÏµÄÖÐ¶ÏÇëÇó */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ð©ï¿½ï¿½ï¿½ï¿½ */
+	static const unsigned char MASK_ALL = 0xFF;	/* ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(IR0~IR7)ï¿½Ïµï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	static const unsigned char EOI = 0x20;		/* End Of Interrupt */
 };
 
