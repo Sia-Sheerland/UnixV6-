@@ -154,6 +154,21 @@ void Diagnose::WriteChar(const char ch)
 		}
 	}
 
+	/* �����Զ������ر�����������������Զ���������ײ� */
+	if ( !m_AutoScroll )
+	{
+		m_AutoScroll = true;
+		if ( m_TotalLines > ROWS )
+		{
+			m_ViewStartLine = m_TotalLines - ROWS;
+		}
+		else
+		{
+			m_ViewStartLine = 0;
+		}
+		RefreshScreen();
+	}
+
 	if(Diagnose::m_Column >= Diagnose::COLUMNS)
 	{
 		NextLine();
@@ -163,8 +178,8 @@ void Diagnose::WriteChar(const char ch)
 	unsigned int bufferPos = m_Row * COLUMNS + m_Column;
 	m_HistoryBuffer[bufferPos] = (unsigned char) ch | Diagnose::COLOR;
 
-	/* ���AutoScroll���ˢ����ʾ */
-	if ( m_AutoScroll && m_Row >= m_ViewStartLine && m_Row < m_ViewStartLine + ROWS )
+	/* ��ʾ����ʾ�ڴ� */
+	if ( m_Row >= m_ViewStartLine && m_Row < m_ViewStartLine + ROWS )
 	{
 		unsigned int screenRow = m_Row - m_ViewStartLine + (SCREEN_ROWS - ROWS);
 		Diagnose::m_VideoMemory[screenRow * COLUMNS + m_Column] = m_HistoryBuffer[bufferPos];
