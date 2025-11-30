@@ -170,9 +170,31 @@ void CRT::WriteChar(char ch)
 		}
 	}
 
+	/* �����Զ������ر�����������������Զ���������ײ� */
+	if ( !m_AutoScroll )
+	{
+		m_AutoScroll = true;
+		if ( m_TotalLines > ROWS )
+		{
+			m_ViewStartLine = m_TotalLines - ROWS;
+		}
+		else
+		{
+			m_ViewStartLine = 0;
+		}
+		RefreshScreen();
+	}
+
 	/* д����ʷ���������ǰλ�� */
 	unsigned int bufferPos = m_CursorY * COLUMNS + m_CursorX;
 	m_HistoryBuffer[bufferPos] = (unsigned char) ch | CRT::COLOR;
+
+	/* ��ʾ����ʾ�ڴ� */
+	if ( m_CursorY >= m_ViewStartLine && m_CursorY < m_ViewStartLine + ROWS )
+	{
+		unsigned int displayY = m_CursorY - m_ViewStartLine;
+		m_VideoMemory[displayY * COLUMNS + m_CursorX] = m_HistoryBuffer[bufferPos];
+	}
 
 	m_CursorX++;
 
@@ -182,12 +204,7 @@ void CRT::WriteChar(char ch)
 	}
     else
     {
-		/* ���AutoScroll����ˢ����һ���ַ� */
-		if ( m_AutoScroll )
-		{
-			m_VideoMemory[(m_CursorY - m_ViewStartLine) * COLUMNS + m_CursorX - 1] = m_HistoryBuffer[bufferPos];
-		}
-    	MoveCursor(m_CursorX, m_CursorY);
+    	MoveCursor(m_CursorX, m_CursorY - m_ViewStartLine);
     }
 }
 
