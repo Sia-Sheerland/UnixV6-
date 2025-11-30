@@ -159,13 +159,13 @@ void Mouse::HandleMousePacket()
 
 		if (wheelDelta > 0)
 		{
-			/* 向上滚动 - 查看历史 */
-			CRT::ScrollUp(1);
+			/* 向上滚动滚轮 - 向下滚动屏幕内容（查看新内容）*/
+			CRT::ScrollDown(1);
 		}
 		else if (wheelDelta < 0)
 		{
-			/* 向下滚动 - 查看新内容 */
-			CRT::ScrollDown(1);
+			/* 向下滚动滚轮 - 向上滚动屏幕内容（查看历史）*/
+			CRT::ScrollUp(1);
 		}
 	}
 
