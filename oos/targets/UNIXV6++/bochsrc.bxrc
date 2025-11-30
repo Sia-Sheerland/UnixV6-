@@ -32,8 +32,9 @@ boot: c
 # where do we send log messages?
 log: bochsout.txt
 
-# disable the mouse, since DLX is text only
-mouse: enabled=0
+# enable the mouse with scroll wheel support (IntelliMouse PS/2)
+# Use F12 to toggle mouse capture (press F12 to release mouse and close window)
+mouse: enabled=1, type=imps2, toggle=f12
 
 # enable key mapping, using US layout as default.
 #
