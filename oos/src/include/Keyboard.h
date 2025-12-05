@@ -30,6 +30,13 @@ public:
 	static const unsigned char SCAN_PAGEUP = 0x49;
 	static const unsigned char SCAN_PAGEDOWN = 0x51;
 
+	/* ���ڽ��㿪��״̬ */
+	enum ScrollFocus
+	{
+		FOCUS_CRT = 0,		/* �����ڴ��ڣ��Ͻ��� */
+		FOCUS_DIAGNOSE = 1	/* ��־���ڣ��½��� */
+	};
+
 	/* ����Ϊ���Ƽ����µ�״̬��mode�и�����λ�Ķ��� */
 	static const int M_LCTRL = 0x01;
 	static const int M_RCTRL = 0x02;
@@ -57,7 +64,13 @@ public:
 
 	/* ������ɨ����ת��Ϊ��Ӧ��ASCII�� */
 	static char ScanCodeTranslate(unsigned char scanCode, int expand);
-	
+
+	/* �л����ڽ��� */
+	static void ToggleFocus();
+
+	/* ��ȡ��ǰ���ڽ��� */
+	static ScrollFocus GetFocus() { return m_ScrollFocus; }
+
 	/* Members */
 public:
 	/* 
@@ -74,6 +87,9 @@ public:
 
 	/* ctrl, alt, shift��״̬������numlock,capslock,scrlock�����ɿ�*/
 	static int Mode;
+
+	/* ��ǰ���ڽ���״̬ */
+	static ScrollFocus m_ScrollFocus;
 };
 
 #endif
