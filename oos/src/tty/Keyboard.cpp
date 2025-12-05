@@ -36,7 +36,8 @@ char Keyboard::Shift_Keymap[] = {
 
 int Keyboard::Mode = 0;
 
-
+/* ��ʼ����ǰ���ڽ���Ϊ���봰�� */
+Keyboard::ScrollFocus Keyboard::m_ScrollFocus = Keyboard::FOCUS_CRT;
 
 void Keyboard::KeyboardHandler( struct pt_regs* reg, struct pt_context* context )
 {
@@ -195,32 +196,52 @@ void Keyboard::HandleScanCode(unsigned char scanCode, int expand)
 		Mode &= ~M_DOWN_SCRLOCK;
 		break;
 
-	/* ��������ɨ��������Ļ���� */
+	/* Tab �� - �л����ڽ��� */
+	case 0x0F:	/* Tab ɨ���� */
+		if ( !(scanCode & 0x80) )  /* ֻ���¼����ɿ� */
+		{
+			ToggleFocus();
+		}
+		break;
+
+	/* ��������ɨ��������Ļ���� - ���ݽ����·��䵽��Ӧ���� */
 	case SCAN_PAGEUP:
 		if ( 0xE0 == expand )	/* Page Up �� ��չ�� */
 		{
-			CRT::ScrollUp(5);	/* ���϶�5�� */
+			if ( m_ScrollFocus == FOCUS_CRT )
+				CRT::ScrollUp(5);	/* �����ڣ����϶�5�� */
+			else
+				Diagnose::ScrollUp(5);	/* ��־���ڣ����϶�5�� */
 		}
 		break;
 
 	case SCAN_PAGEDOWN:
 		if ( 0xE0 == expand )	/* Page Down �� ��չ�� */
 		{
-			CRT::ScrollDown(5);	/* ���¹���5�� */
+			if ( m_ScrollFocus == FOCUS_CRT )
+				CRT::ScrollDown(5);	/* �����ڣ����¹���5�� */
+			else
+				Diagnose::ScrollDown(5);	/* ��־���ڣ����¹���5�� */
 		}
 		break;
 
 	case SCAN_UP:
 		if ( 0xE0 == expand )	/* �����ͷ�� ��չ�� */
 		{
-			CRT::ScrollUp(1);	/* ���϶�1�� */
+			if ( m_ScrollFocus == FOCUS_CRT )
+				CRT::ScrollUp(1);	/* �����ڣ����϶�1�� */
+			else
+				Diagnose::ScrollUp(1);	/* ��־���ڣ����϶�1�� */
 		}
 		break;
 
 	case SCAN_DOWN:
 		if ( 0xE0 == expand )	/* �����·�� ��չ�� */
 		{
-			CRT::ScrollDown(1);	/* ���¹���1�� */
+			if ( m_ScrollFocus == FOCUS_CRT )
+				CRT::ScrollDown(1);	/* �����ڣ����¹���1�� */
+			else
+				Diagnose::ScrollDown(1);	/* ��־���ڣ����¹���1�� */
 		}
 		break;
 
@@ -314,5 +335,20 @@ ScanCodeTranslate(unsigned char scanCode, int expand)
 	}
 
 	return ch;
+}
+
+void Keyboard::ToggleFocus()
+{
+	/* �л����ڽ��� */
+	if ( m_ScrollFocus == FOCUS_CRT )
+	{
+		m_ScrollFocus = FOCUS_DIAGNOSE;
+		Diagnose::Write("[Focus: Diagnose Window]\n");
+	}
+	else
+	{
+		m_ScrollFocus = FOCUS_CRT;
+		Diagnose::Write("[Focus: CRT Window]\n");
+	}
 }
 

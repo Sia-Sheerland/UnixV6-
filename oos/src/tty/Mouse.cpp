@@ -2,6 +2,7 @@
 #include "IOPort.h"
 #include "CRT.h"
 #include "Video.h"
+#include "Keyboard.h"
 
 /* 静态成员变量初始化 */
 unsigned char Mouse::m_MousePacket[4] = {0, 0, 0, 0};
@@ -157,15 +158,22 @@ void Mouse::HandleMousePacket()
 			wheelDelta |= 0xF0;
 		}
 
+		/* ���ݽ��㴰���л����� */
 		if (wheelDelta > 0)
 		{
 			/* 向上滚动滚轮 - 向下滚动屏幕内容（查看新内容）*/
-			CRT::ScrollDown(1);
+			if ( Keyboard::GetFocus() == Keyboard::FOCUS_CRT )
+				CRT::ScrollDown(1);
+			else
+				Diagnose::ScrollDown(1);
 		}
 		else if (wheelDelta < 0)
 		{
 			/* 向下滚动滚轮 - 向上滚动屏幕内容（查看历史）*/
-			CRT::ScrollUp(1);
+			if ( Keyboard::GetFocus() == Keyboard::FOCUS_CRT )
+				CRT::ScrollUp(1);
+			else
+				Diagnose::ScrollUp(1);
 		}
 	}
 
