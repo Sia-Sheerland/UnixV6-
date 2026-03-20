@@ -62,14 +62,14 @@ void Utility::CopySeg2(unsigned long src, unsigned long des)
 	//第二页virtual addess从4096开始
 	unsigned char* addressDes = (unsigned char*)(PageManager::PAGE_SIZE + des % PageManager::PAGE_SIZE);	
 	//需要刷新页表缓存
-	FlushPageDirectory();
+	FlushPageDirectory(0x200000);
 
 	*addressDes = *addressSrc;
 	
 	//恢复原页表映射
 	userPageTable[0].m_PageBaseAddress = oriEntry1;
 	userPageTable[1].m_PageBaseAddress = oriEntry2;
-	FlushPageDirectory();
+	FlushPageDirectory(0x200000);
 }
 
 void Utility::CopySeg(unsigned long src, unsigned long des)
@@ -90,14 +90,14 @@ void Utility::CopySeg(unsigned long src, unsigned long des)
 
 	unsigned char* addressDes = (unsigned char*)(0xC0000000 + (borrowedPTE + 1)*PageManager::PAGE_SIZE + des % PageManager::PAGE_SIZE);
 	//需要刷新页表缓存
-	FlushPageDirectory();
+	FlushPageDirectory(0x200000);
 
 	*addressDes = *addressSrc;
 
 	//恢复原页表映射
 	PageTable[borrowedPTE].m_PageBaseAddress = oriEntry1;
 	PageTable[(borrowedPTE + 1)].m_PageBaseAddress = oriEntry2;
-	FlushPageDirectory();
+	FlushPageDirectory(0x200000);
 }
 
 short Utility::GetMajor(const short dev)

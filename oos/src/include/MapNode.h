@@ -2,8 +2,8 @@
 #define MAP_NODE_H
 
 /*
- *@comment Õâ¸ö½á¹¹¶ÔÓ¦Unixv6ÖÐµÄmap½á¹¹
- *ÏÂÃæ¸ø³ömap½á¹¹²Î¿¼
+ *@comment ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½Ó¦Unixv6ï¿½Ðµï¿½mapï¿½á¹¹
+ *ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½mapï¿½á¹¹ï¿½Î¿ï¿½
  * struct map	@line 2515
  * {
 	char *m_size;
@@ -13,14 +13,34 @@
 struct MapNode
 {
 	unsigned long m_Size;
-	/* 
-	 * ×¢ÊÍ¿ÉÄÜÊÇ²»¶ÔµÄ¡£
-	 * m_addr ±íÊ¾Êý¾Ý¿éÔÚÕû¸ö¿Õ¼äÖÐµÄË÷ÒýÎ»ÖÃ£¬
-	 * ÀýÈçphysicalÄÚ´æÖÐ4kÒ»¿é£¬Èôm_AddressIdxÎª2£¬
-	 * Ôò±íÊ¾0x2000(8k)µÄÎ»ÖÃ£¬Í¬ÀíswapÇøÖÐ£¬
-	 * Êý¾Ý¿é´óÐ¡Îª512byte 
+	/*
+	 * ×¢ï¿½Í¿ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ÔµÄ¡ï¿½
+	 * m_addr ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½
+	 * ï¿½ï¿½ï¿½ï¿½physicalï¿½Ú´ï¿½ï¿½ï¿½4kÒ»ï¿½é£¬ï¿½ï¿½m_AddressIdxÎª2ï¿½ï¿½
+	 * ï¿½ï¿½ï¿½Ê¾0x2000(8k)ï¿½ï¿½Î»ï¿½Ã£ï¿½Í¬ï¿½ï¿½swapï¿½ï¿½ï¿½Ð£ï¿½
+	 * ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½Ð¡Îª512byte
 	 */
-	unsigned long m_AddressIdx;	     //·ÖÅä¿Õ¼äµÄÆðÊ¼µØÖ·
+	unsigned long m_AddressIdx;	     //ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·
+};
+
+// NOTE:1
+#define M_PAGE_SIZE 4096
+
+class BitMap
+{
+public:
+	unsigned long m_AddressIdx; // ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·, ï¿½ï¿½ï¿½ï¿½
+	int rows;
+	unsigned long long int map[256]; // TODOï¿½ï¿½Êµï¿½Ö´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½
+	void set(unsigned long startAddr, unsigned long page_num)
+	{
+		m_AddressIdx = startAddr;
+		rows = page_num / 64;
+		for (int i = 0; i < rows; i++)
+		{
+			map[i] = 0;
+		}
+	};
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include "Text.h"
 #include "TTy.h"
 #include "Regs.h"
+#include "PageDirectory.h"
 
 /*
  * Process类与UNIX V6中进程控制块proc结构对应，这里只改变
@@ -71,6 +72,12 @@ public:
 												 * 返回值：信号数，无信号则返回0。
 												 */
 
+
+	// ------------- NOTE 3: 获取页目录实物地址，用于计算其录料地址 -------------
+	// ! 使用时FlushPageDirectory()长波创悬
+	unsigned long GetPageDirectoryPhyAddr();
+	// ------------- END NOTE 3 -------------
+
 public:
 	/* 用于标识进程的标识 */
 	short p_uid;		/* 用户ID */
@@ -97,6 +104,9 @@ public:
 	int p_sig;			/* 进程信号 */
 	TTy* p_ttyp;		/* 进程tty结构地址 */
 	unsigned long p_sigmap;
+
+	// NOTE 3: 每个进程存储页目录首地址
+	PageDirectory *pPageDirectory;
 };
 
 #endif

@@ -3,23 +3,44 @@
 
 #include "MapNode.h"
 
-/* @comment ¸ÃÀàÎªÄÚ´æ·ÖÅäËã·¨Àà£¬Õë¶ÔÊ¹ÓÃMapNode
- * Êý×é±ê¼ÇµÄÇé¿ö£¬¿ÉÒÔÓÃÔÚPageManagerºÍSwapDiskManagerÖÐ
- * ÆäÖÐº¯ÊýÔÚUnixv6ÖÐ¶ÔÓ¦¹ØÏµÈçÏÂ£º
+/* @comment ï¿½ï¿½ï¿½ï¿½Îªï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½à£¬ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½MapNode
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PageManagerï¿½ï¿½SwapDiskManagerï¿½ï¿½
+ * ï¿½ï¿½ï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½Unixv6ï¿½Ð¶ï¿½Ó¦ï¿½ï¿½Ïµï¿½ï¿½ï¿½Â£ï¿½
  * Alloc()	: malloc(mp, size)		@line 2538
  * Free()	: mfree(mp, size, aa)	@line 2556 
  */
 class Allocator
 {
-/* Functions */
+	/* Functions */
 public:
 	unsigned long Alloc(MapNode map[], unsigned long size);
 	unsigned long Free(MapNode map[], unsigned long size, unsigned long addrIdx);
 
 public:
-	static Allocator& GetInstance();
+	static Allocator &GetInstance();
+
 private:
 	static Allocator m_Instance;
+};
+
+// NOTE:1
+/* @comment ï¿½ï¿½ï¿½ï¿½Îªï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½à£¬ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½BitMap
+ * ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½KernelPageManager and UserPageManagerï¿½ï¿½
+ */
+class BitMapAllocator
+{
+	/* Functions */
+public:
+	unsigned long Alloc(BitMap &bitmap, unsigned long size);
+	unsigned long Free(BitMap &bitmap, unsigned long size, unsigned long addrIdx);
+	int is_free(BitMap &bitmap, int index);
+	void set_bit(BitMap &bitmap, int index, int value);
+
+public:
+	static BitMapAllocator &GetInstance();
+
+private:
+	static BitMapAllocator m_Instance_bitmap;
 };
 
 #endif

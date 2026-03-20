@@ -6,30 +6,30 @@
 Kernel Kernel::instance;
 
 /* 
- * ÄÚ´æ¹ÜÀíÏà¹ØµÄÈ«¾Ömanager
+ * ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½È«ï¿½ï¿½manager
  */
-UserPageManager g_UserPageManager(&(Allocator::GetInstance()));
-KernelPageManager g_KernelPageManager(&(Allocator::GetInstance()));
+UserPageManager g_UserPageManager(&(BitMapAllocator::GetInstance()));
+KernelPageManager g_KernelPageManager(&(BitMapAllocator::GetInstance()));
 KernelAllocator g_KernelAllocator(&(Allocator::GetInstance()));
 
 /*
- * ½»»»ÇøÏà¹ØÈ«¾Ömanager
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½manager
  */
 SwapperManager g_SwapperManager(&(Allocator::GetInstance()));
 
 /* 
- * ½ø³ÌÏà¹ØÈ«¾Ömanager
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½manager
  */
 ProcessManager g_ProcessManager;
 
 /*
- * Éè±¸¹ÜÀí¡¢¸ßËÙ»º´æ¹ÜÀíÈ«¾Ömanager
+ * ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½manager
  */
 BufferManager g_BufferManager;
 DeviceManager g_DeviceManager;
 
 /*
- * ÎÄ¼şÏµÍ³Ïà¹ØÈ«¾Ömanager
+ * ï¿½Ä¼ï¿½ÏµÍ³ï¿½ï¿½ï¿½È«ï¿½ï¿½manager
  */
 FileSystem g_FileSystem;
 FileManager g_FileManager;
@@ -63,7 +63,7 @@ void Kernel::InitMemory()
 	this->GetKernelAllocator().Initialize();
 	Diagnose::Write("Ok.\n");
 
-	/* ÉèÖÃnew/delete operatorĞèÒªÊ¹ÓÃµÄAllocator */
+	/* ï¿½ï¿½ï¿½ï¿½new/delete operatorï¿½ï¿½ÒªÊ¹ï¿½Ãµï¿½Allocator */
 	set_kernel_allocator(this->m_KernelAllocator);
 
 	this->m_SwapperManager = &g_SwapperManager;

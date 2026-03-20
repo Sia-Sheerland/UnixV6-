@@ -18,6 +18,13 @@ Process::~Process()
 {
 }
 
+// ------------- NOTE 3: 获取页目录实物地址 -------------
+unsigned long Process::GetPageDirectoryPhyAddr()
+{
+	return (unsigned long)(this->pPageDirectory) - Machine::KERNEL_SPACE_START_ADDRESS;
+}
+// ------------- END NOTE 3 -------------
+
 
 void Process::SetRun()
 {

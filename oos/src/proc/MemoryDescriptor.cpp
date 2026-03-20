@@ -155,50 +155,17 @@ void MemoryDescriptor::DisplayPageTable()
 	Diagnose::Write("\n");
 }
 
+// ------------- NOTE 3: MapToPageTable just flushes process page directory (discrete design) -------------
 void MemoryDescriptor::MapToPageTable()
 {
-	User& u = Kernel::Instance().GetUser();
+	User &u = Kernel::Instance().GetUser();
 
-	if(u.u_MemoryDescriptor.m_UserPageTableArray == NULL)
+	if (NULL == u.u_MemoryDescriptor.m_UserPageTableArray)
+	{
 		return;
-
-	PageTable* pUserPageTable = Machine::Instance().GetUserPageTableArray();
-	unsigned int textPF = 0;
-	if ( u.u_procp->p_textp != NULL )
-	{
-		textPF = u.u_procp->p_textp->x_caddr >> 12;
 	}
 
-	unsigned int pAddrPF = u.u_procp->p_addr >> 12;
-
-	for (unsigned int i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
-	{
-		for ( unsigned int j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++ )
-		{
-			pUserPageTable[i].m_Entrys[j].m_Present = 0;   // Çå0±íÊ¾¸ÃÂß¼­Ò³²»´æÔÚ
-
-			if ( 1 == this->m_UserPageTableArray[i].m_Entrys[j].m_Present )
-			{
-				if ( 0 == this->m_UserPageTableArray[i].m_Entrys[j].m_ReadWriter )      // ROÂß¼­Ò³
-				{
-					pUserPageTable[i].m_Entrys[j].m_Present = 1;
-					pUserPageTable[i].m_Entrys[j].m_ReadWriter = 0;
-					pUserPageTable[i].m_Entrys[j].m_PageBaseAddress = this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress + textPF;
-				}
-				else if ( 1 == this->m_UserPageTableArray[i].m_Entrys[j].m_ReadWriter )    // RWÂß¼­Ò³
-				{
-					pUserPageTable[i].m_Entrys[j].m_Present = 1;
-					pUserPageTable[i].m_Entrys[j].m_ReadWriter = 1;
-					pUserPageTable[i].m_Entrys[j].m_PageBaseAddress = this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress + pAddrPF;
-				}
-			}
-		}
-	}
-
-	pUserPageTable[0].m_Entrys[0].m_Present = 1;
-	pUserPageTable[0].m_Entrys[0].m_ReadWriter = 1;
-	pUserPageTable[0].m_Entrys[0].m_PageBaseAddress = 0;
-
-	FlushPageDirectory();
+	FlushPageDirectory(u.u_procp->GetPageDirectoryPhyAddr());
 }
+// ------------- END NOTE 3 -------------
 

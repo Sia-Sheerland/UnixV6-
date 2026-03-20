@@ -2,47 +2,48 @@
 #define	ASSEMBLY_H
 
 /*
- * X86AssemblyÀà¶¨ÒåÁË¶Ôx86Æ½Ì¨ÖĞ²¿·ÖÌØÈ¨¼¶Ö¸ÁîµÄ³éÏó¡£
+ * X86Assemblyï¿½à¶¨ï¿½ï¿½ï¿½Ë¶ï¿½x86Æ½Ì¨ï¿½Ğ²ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½Ö¸ï¿½ï¿½Ä³ï¿½ï¿½ï¿½
  * 
- * Ê¹ÓÃC++ Inline Assembly ·â×°lgdt, lidt, ltr, cli, 
- * stiµÈÖ¸Áî£¬ÓÃÓÚ½â¾öC++ÓïÑÔÎŞ·¨Í¨¹ı±àÒë²úÉúµÄÌØÈ¨¼¶
- * Ö¸Áî£¬Íê³É¿ª/¹ØÖĞ¶Ï¡¢¼ÓÔØgdt¡¢idtµÈÈÎÎñ¡£
+ * Ê¹ï¿½ï¿½C++ Inline Assembly ï¿½ï¿½×°lgdt, lidt, ltr, cli, 
+ * stiï¿½ï¿½Ö¸ï¿½î£¬ï¿½ï¿½ï¿½Ú½ï¿½ï¿½C++ï¿½ï¿½ï¿½ï¿½ï¿½Ş·ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½
+ * Ö¸ï¿½î£¬ï¿½ï¿½É¿ï¿½/ï¿½ï¿½ï¿½Ğ¶Ï¡ï¿½ï¿½ï¿½ï¿½ï¿½gdtï¿½ï¿½idtï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 
-/* Ë¢ĞÂÒ³±í£¬ÔÚÃ¿´Î¶ÔÒ³±í½øĞĞĞŞ¸ÄºóĞèÒªµ÷ÓÃ£¬ÖØĞÂ»º´æÒ³±í */
-#define FlushPageDirectory()	\
-	__asm__ __volatile__(" movl %0, %%cr3" : : "r"(0x200000) );
+/* Ë¢ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½Î¶ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş¸Äºï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ */
+/* NOTE 3: now accepts physical address of page directory */
+#define FlushPageDirectory(phyAddr)	\
+	__asm__ __volatile__(" movl %0, %%cr3" : : "r"(phyAddr) );
 
 class X86Assembly
 {
 	public:
-		//ÔÊĞíÖĞ¶Ï
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½
 		static inline void STI()
 		{
 			__asm__ __volatile__("sti");
 		}
 		
-		//ÆÁ±ÎÖĞ¶Ï
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½
 		static inline void CLI()
 		{
 			__asm__ __volatile__("cli");
 		}
 		
-		//lidtÖ¸Áî
+		//lidtÖ¸ï¿½ï¿½
 		static inline void LIDT(unsigned short idtr[3])
 		{
 			__asm__ __volatile__("lidt %0"::"m" (*idtr));
-			//ÌØ±ğÌáĞÑ£ºlidtÖ¸ÁîµÄ²Ù×÷ÊıÊÇ6×Ö½ÚµÄLimit+BaseAddress, ¶ø²»ÊÇÕâ6¸ö×Ö½ÚµÄÊ×µØÖ·
-			//ËùÒÔ¡°(*idtr)¡±ÖĞµÄ¡° * ¡±²»¿ÉÒÔÂ©µô£¡£¡£¡
+			//ï¿½Ø±ï¿½ï¿½ï¿½ï¿½Ñ£ï¿½lidtÖ¸ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6ï¿½Ö½Úµï¿½Limit+BaseAddress, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6ï¿½ï¿½ï¿½Ö½Úµï¿½ï¿½×µï¿½Ö·
+			//ï¿½ï¿½ï¿½Ô¡ï¿½(*idtr)ï¿½ï¿½ï¿½ĞµÄ¡ï¿½ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		}
 		
-		//lgdtÖ¸Áî
+		//lgdtÖ¸ï¿½ï¿½
 		static inline void LGDT(unsigned short gdtr[3])
 		{
 			__asm__ __volatile__("lgdt %0"::"m" (*gdtr));
 		}
 
-		//ltrÖ¸Áî
+		//ltrÖ¸ï¿½ï¿½
 		static inline void LTR(unsigned short tssSelector)
 		{
 			__asm__ __volatile__("mov %0, %%ax\n\tltr %%ax"::"m"(tssSelector));

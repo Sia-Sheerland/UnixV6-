@@ -248,35 +248,79 @@ IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(GeneralProtection, "General Protection!", Us
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(PageFaultEntrance, PageFault)
 //IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(PageFault, "Page Fault!", User::SIGSEGV)
 
-void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
+void Exception::PageFault(struct pt_regs *regs, struct pte_context *context)
 {
-
-	User& u = Kernel::Instance().GetUser();
-	Process* current = u.u_procp;
-	MemoryDescriptor& md = u.u_MemoryDescriptor;
+	User &u = Kernel::Instance().GetUser();
+	Process *current = u.u_procp;
+	MemoryDescriptor &md = u.u_MemoryDescriptor;
 
 	unsigned int cr2;
-	__asm__ __volatile__(" mov %%cr2, %0":"=r"(cr2) );
+	__asm__ __volatile__(" mov %%cr2, %0" : "=r"(cr2));
 
-    /*由缺页异常处理程序每次扩展一页，如果合理的缺了多张堆栈页面，那就多执行几次缺页异常，直到把这些页面补齐*/
+	// ---- NOTE:COW ---- //
+	unsigned char RW = md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_ReadWriter;
 
-	if( (context->xcs & USER_MODE) == USER_MODE)
+	// COW logic:
+	// Page fault in data or stack region &
+	// R/W bit is Read Only &
+	// reference count Page[] >= 1
+	Process *pcurrent = NULL;
+	UserPageManager &userPageMgr = Kernel::Instance().GetUserPageManager();
+	ProcessManager &procMgr = Kernel::Instance().GetProcessManager();
+	bool isRW = (cr2 >= md.m_DataStartAddress && cr2 < md.m_DataStartAddress + md.m_DataSize) ||
+				(cr2 >= MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize && cr2 < MemoryDescriptor::USER_SPACE_SIZE);
+	unsigned int physicalBase = md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_PageBaseAddress;
+
+	if (RW == 0 && userPageMgr.Page[physicalBase] >= 1 && isRW)
 	{
-		if( cr2 < MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize && cr2 >= context->esp - 8
-				&& md.m_DataSize + md.m_StackSize + PageManager::PAGE_SIZE < MemoryDescriptor::USER_SPACE_SIZE - md.m_DataStartAddress )
+		if (userPageMgr.Page[physicalBase] == 1)
+		{
+			// Only one reference - just restore write permission
+			md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_ReadWriter = 1;
+			return;
+		}
+		else
+		{
+			// Multiple references - allocate new page and copy (COW)
+			--userPageMgr.Page[physicalBase];
+			unsigned long newPage = userPageMgr.AllocMemory(M_PAGE_SIZE);
+			md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_PageBaseAddress = newPage >> 12;
+			md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_UserSupervisor = 0x1;
+			md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_Present = 0x1;
+			md.m_UserPageTableArray->m_Entrys[(cr2 >> 12) - 1024].m_ReadWriter = 1;
+			userPageMgr.Page[newPage >> 12] = 1;
+
+			for (int i = 0; i < procMgr.NPROC; ++i)
+			{
+				if (procMgr.process[i].p_pid == current->p_ppid)
+				{
+					pcurrent = &procMgr.process[i];
+					break;
+				}
+			}
+
+			Utility::CopySeg(physicalBase << 12, newPage);
+			return;
+		}
+	}
+	// ---- End of NOTE:COW ---- //
+
+	/* Each page fault extends stack by one page; if multiple stack pages are missing, multiple faults fire */
+	if ((context->xcs & USER_MODE) == USER_MODE)
+	{
+		if (cr2 < MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize && cr2 >= context->esp - 8 && md.m_DataSize + md.m_StackSize + PageManager::PAGE_SIZE < MemoryDescriptor::USER_SPACE_SIZE - md.m_DataStartAddress)
 			current->SStack();
 		else
 		{
 			Diagnose::Write("Invalid MM access");
-			current -> PSignal(User::SIGSEGV);
-			if ( current->IsSig() )
-				current->PSig( (pt_context *)&context->eip );
+			current->PSignal(User::SIGSEGV);
+			if (current->IsSig())
+				current->PSig((pt_context *)&context->eip);
 		}
 	}
 	else
 		Utility::Panic("Page Fault in Kernel Mode.");
 }
-
 //x87 FPU浮点错误(INT 16)
 IMPLEMENT_EXCEPTION_ENTRANCE(CoprocessorErrorEntrance, CoprocessorError)
 IMPLEMENT_EXCEPTION_HANDLER(CoprocessorError, "Coprocessor Error!", User::SIGFPE)

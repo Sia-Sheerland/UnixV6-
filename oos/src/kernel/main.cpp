@@ -157,7 +157,7 @@ extern "C" void next()
 {
 	//���ʱ��0M-4M���ڴ�ӳ���Ѿ�����ʹ���ˣ�����Ҫ����ӳ���û�̬��ҳ����Ϊ�û�̬������������׼��
 	//Machine::Instance().InitUserPageTable();
-	//FlushPageDirectory();
+	//FlushPageDirectory(0x200000);
 
 	Machine::Instance().LoadTaskRegister();
 	
@@ -237,7 +237,7 @@ extern "C" void next()
 	else               /* 1#����ִ��Ӧ�ó���shell.exe,����ͨ����  */
 	{
 		Machine::Instance().InitUserPageTable();      //����ֱ��д0x202,0x203ҳ����û�����ʵ��ַӳ���һ��okay��
-		FlushPageDirectory();
+		FlushPageDirectory(0x200000);
 
 		CRT::ClearScreen();
 

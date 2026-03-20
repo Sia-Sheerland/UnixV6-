@@ -3,42 +3,43 @@
 
 #include "MapNode.h"
 #include "Allocator.h"
+#include "MemoryDescriptor.h"
 
 class PageManager
 {
 public:
 	/* static member */
-	static unsigned int PHY_MEM_SIZE;	/* ÎïÀíÄÚ´æ´óĞ¡£¬ÏµÍ³Æô¶¯Ê±¸ù¾İÎïÀíÄÚ´æ´óĞ¡ÉèÖÃ */
-	
+	static unsigned int PHY_MEM_SIZE; /* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ */
+
 	/* static const member */
-	static const unsigned int PAGE_SIZE = 0x1000;					/* ÎïÀíÄÚ´æÒ³´óĞ¡ */
-	static const unsigned int MEMORY_MAP_ARRAY_SIZE = 0x200;		/* ×î¶à¿É·ÖÅä512¸ö¶ÔÏó */
-	static const unsigned int KERNEL_MEM_START_ADDR	= 0x100000;		/* ÄÚºËÓ³Ïñ´Ó1MÎïÀíÄÚ´æ¿ªÊ¼ */
-	static const unsigned int KERNEL_SIZE			= 0x80000;		/* ÄÚºËÓ³Ïñ´óĞ¡ÏŞÖÆ(Ò»°ã¶ş½øÖÆÓ³ÏñÔ¶²»»áµ½512K´óĞ¡) */
+	static const unsigned int PAGE_SIZE = 0x1000;				/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ò³ï¿½ï¿½Ğ¡ */
+	static const unsigned int MEMORY_MAP_ARRAY_SIZE = 0x200;	/* ï¿½ï¿½ï¿½É·ï¿½ï¿½ï¿½512ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+	static const unsigned int KERNEL_MEM_START_ADDR = 0x100000; /* ï¿½Úºï¿½Ó³ï¿½ï¿½ï¿½1Mï¿½ï¿½ï¿½ï¿½ï¿½Ú´æ¿ªÊ¼ */
+	static const unsigned int KERNEL_SIZE = 0x80000;			/* ï¿½Úºï¿½Ó³ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½(Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½áµ½512Kï¿½ï¿½Ğ¡) */
 
 	/* Functions */
 public:
-	PageManager(Allocator* allocator);
+	PageManager(BitMapAllocator *allocator);
 	virtual ~PageManager();
-	
-	/* Íê³É¶ÔMapNode map[]Êı×éµÄ³õÊ¼»¯ÇåÁã */
+
+	/* ï¿½ï¿½É¶ï¿½MapNode map[]ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	int Initialize();
-	/* 
-	 * ÎïÀíÄÚ´æ·ÖÅä
-	 * 
-	 * size: Ğè·ÖÅäÄÚ´æ´óĞ¡(µ¥Î»: byte)£¬Êµ¼Ê·ÖÅäÎïÀíÄÚ´æ´óĞ¡ÒÔÒ³
-	 * Îªµ¥Î»£¬»á¸ù¾İsize´óĞ¡ÒÔ4KÎª±ß½ç£¬ÏòÉÏÈ¡ÕûÖÁ4K×Ö½ÚÕûÊı±¶¡£
-	 * 
-	 * ·µ»ØÖµ: ³É¹¦·ÖÅäµÄÎïÀíÄÚ´æÇøÆğÊ¼µØÖ·£¬·µ»Ø0±íÊ¾·ÖÅäÊ§°Ü¡£
+	/*
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½
+	 *
+	 * size: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡(ï¿½ï¿½Î»: byte)ï¿½ï¿½Êµï¿½Ê·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡ï¿½ï¿½Ò³
+	 * Îªï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sizeï¿½ï¿½Ğ¡ï¿½ï¿½4KÎªï¿½ß½ç£¬ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½4Kï¿½Ö½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 *
+	 * ï¿½ï¿½ï¿½ï¿½Öµ: ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü¡ï¿½
 	 */
 	unsigned long AllocMemory(unsigned long size);
-	/* 
-	 * ÎïÀíÄÚ´æÊÍ·Å
-	 * 
-	 * size: ĞèÊÍ·ÅÄÚ´æ´óĞ¡(µ¥Î»: byte)£¬Êµ¼ÊÊÍ·ÅÎïÀíÄÚ´æ´óĞ¡ÒÔÒ³
-	 * Îªµ¥Î»£¬»á¸ù¾İsize´óĞ¡ÒÔ4KÎª±ß½ç£¬ÏòÉÏÈ¡ÕûÖÁ4K×Ö½ÚÕûÊı±¶¡£
-	 * 
-	 * ·µ»ØÖµ: ÊÍ·ÅÎïÀíÄÚ´æ²Ù×÷×ÜÄÜ³É¹¦£¬µ«Í¨³£²»¼ì²éÆä·µ»ØÖµ¡£
+	/*
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Í·ï¿½
+	 *
+	 * size: ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡(ï¿½ï¿½Î»: byte)ï¿½ï¿½Êµï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ğ¡ï¿½ï¿½Ò³
+	 * Îªï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sizeï¿½ï¿½Ğ¡ï¿½ï¿½4KÎªï¿½ß½ç£¬ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½4Kï¿½Ö½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 *
+	 * ï¿½ï¿½ï¿½ï¿½Öµ: ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³É¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä·µï¿½ï¿½Öµï¿½ï¿½
 	 */
 	unsigned long FreeMemory(unsigned long size, unsigned long memoryStartAddress);
 
@@ -49,39 +50,43 @@ private:
 public:
 	MapNode map[PageManager::MEMORY_MAP_ARRAY_SIZE];
 
-private:
-	Allocator* m_pAllocator;
-};
+	// NOTE:1
+	BitMap bitmap;
 
+	// NOTE:COW - reference counting array for COW
+	int Page[MemoryDescriptor::USER_SPACE_SIZE / PAGE_SIZE];
+
+private:
+	BitMapAllocator *m_pAllocator;
+};
 
 class KernelPageManager : public PageManager
 {
 public:
-	/* 
-	 * ÎïÀíµØÖ· 0x200000 ±»ÓÃÓÚPageDirectory, 
-	 * ÎïÀíµØÖ· 0x201000 ±»ÓÃÓÚÄÚºËÒ³±í, 
-	 * ÎïÀíµØÖ· 0x202000 Óë 0x203000 ÓÃÓÚÓÃ»§³ÌĞòÒ³±í.
+	/*
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö· 0x200000 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PageDirectory,
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö· 0x201000 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½Ò³ï¿½ï¿½,
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö· 0x202000 ï¿½ï¿½ 0x203000 ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½.
 	 */
 	static const unsigned int KERNEL_PAGE_POOL_START_ADDR = 0x200000 + 0x2000 + 0x2000;
 	static const unsigned int KERNEL_PAGE_POOL_SIZE = 0x200000 - 0x4000;
 
 public:
-	KernelPageManager(Allocator* allocator);
-	int Initialize();	/* ³õÊ¼»¯MapNode map[0]ÎªÄÚºËÎïÀíÒ³ÇøÆğÊ¼µØÖ·¡¢´óĞ¡ */
+	KernelPageManager(BitMapAllocator *allocator);
+	int Initialize(); /* ï¿½ï¿½Ê¼ï¿½ï¿½MapNode map[0]Îªï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ğ¡ */
 };
-
 
 class UserPageManager : public PageManager
 {
 public:
 	/* static const member */
-	static const unsigned int USER_PAGE_POOL_START_ADDR = 0x400000;		/* ÓÃ»§ÎïÀíÄÚ´æÇøÓòÆğÊ¼µØÖ· */
+	static const unsigned int USER_PAGE_POOL_START_ADDR = 0x400000; /* ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö· */
 	/* static member */
-	static unsigned int USER_PAGE_POOL_SIZE;		/* ÓÃ»§ÎïÀíÄÚ´æÇøÓò´óĞ¡£ºÓÉÄÚºË³õÊ¼»¯Ê±½øĞĞÉèÖÃ */
-	
+	static unsigned int USER_PAGE_POOL_SIZE; /* ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ÚºË³ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+
 public:
-	UserPageManager(Allocator* allocator);
-	int Initialize();	/* ³õÊ¼»¯MapNode map[0]ÎªÓÃ»§ÎïÀíÒ³ÇøÆğÊ¼µØÖ·¡¢´óĞ¡ */
+	UserPageManager(BitMapAllocator *allocator);
+	int Initialize(); /* ï¿½ï¿½Ê¼ï¿½ï¿½MapNode map[0]Îªï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ğ¡ */
 };
 
 #endif
