@@ -12,7 +12,7 @@ unsigned long Allocator::Alloc(MapNode map[], unsigned long size)
 	MapNode* pNode;
 	unsigned long retIdx = 0;
 
-	/* ÈôpNode->m_Size == 0Ôò±íÊ¾ÒÑ¾­±éÀúµ½½áÎ² */
+	/* ï¿½ï¿½pNode->m_Size == 0ï¿½ï¿½ï¿½Ê¾ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î² */
 	for ( pNode = map; pNode->m_Size; pNode++)
 	{
 		if ( pNode->m_Size >= size )
@@ -20,7 +20,7 @@ unsigned long Allocator::Alloc(MapNode map[], unsigned long size)
 			retIdx = pNode->m_AddressIdx;
 			pNode->m_AddressIdx += size;
 			pNode->m_Size -= size;
-			/* µ±Ç°ÄÚ´æÕýºÃ·ÖÅäÍê³É£¬½«¸ÃMapNodeËùÔÚÎ»ÖÃºóÃæµÄMapNode¶¼ÏòÇ°ÒÆ¶¯Ò»¸öÎ»ÖÃ */
+			/* ï¿½ï¿½Ç°ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½MapNodeï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãºï¿½ï¿½ï¿½ï¿½MapNodeï¿½ï¿½ï¿½ï¿½Ç°ï¿½Æ¶ï¿½Ò»ï¿½ï¿½Î»ï¿½ï¿½ */
 			if ( pNode->m_Size == 0 ) 
 			{
 				MapNode* pNextNode = (pNode + 1);
@@ -41,19 +41,19 @@ unsigned long Allocator::Alloc(MapNode map[], unsigned long size)
 unsigned long Allocator::Free(MapNode map[], unsigned long size, unsigned long addrIdx)
 {
 	MapNode* pNode;
-	/* Ê×ÏÈ£¬pNodeÖ¸ÏòÕýºÃÊÇaddrIdxÏÂÒ»¿é¿ÕÏÐÇø */
+	/* ï¿½ï¿½ï¿½È£ï¿½pNodeÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½addrIdxï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	for ( pNode = map; pNode->m_AddressIdx <= addrIdx && pNode->m_Size != 0; ++pNode );
 	/* 
-	 * 1) pNode²»ÊÇµÚÒ»¿é£¬¼´²»ÊÇÔÚÍ·²¿²åÈë
-	 * 2) ÐèÒªfreeµÄÊý¾Ý¿éÕýºÃÓëpLastNodeÏàÁÚ
-	 * 3) ÒòÎªÈç¹ûpNodeÊÇµÚÒ»¸ö»°Ìõ¼þ2)Ò»¶¨²»»á³ÉÁ¢£¬
-	 * Òò´Ë¿ÉÒÔ±£Ö¤pLastNodeÔÚÌõ¼þÄÚÒ»¶¨²»»áÐ¡ÓÚmapµÄµØÖ·
+	 * 1) pNodeï¿½ï¿½ï¿½Çµï¿½Ò»ï¿½é£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 * 2) ï¿½ï¿½Òªfreeï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pLastNodeï¿½ï¿½ï¿½ï¿½
+	 * 3) ï¿½ï¿½Îªï¿½ï¿½ï¿½pNodeï¿½Çµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2)Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 * ï¿½ï¿½Ë¿ï¿½ï¿½Ô±ï¿½Ö¤pLastNodeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½mapï¿½Äµï¿½Ö·
 	 */
 	MapNode* pLastNode = pNode - 1;
 	if ( pNode > map && addrIdx == pLastNode->m_AddressIdx + pLastNode->m_Size )
 	{
 		pLastNode->m_Size += size;
-		/* ÕâÀï´¦ÀíÓëºóÃæ¿ÕÏÐ¿éÏàÁÚµÄÇé¿ö£¬ÐèÒªºÏ²¢ºóÒÀ´ÎÏòÇ°ÒÆ¶¯¿ÕÏÐ¿é */
+		/* ï¿½ï¿½ï¿½ï´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ */
 		if ( addrIdx + size == pNode->m_AddressIdx )  
 		{
 			pLastNode->m_Size += pNode->m_Size;
@@ -65,9 +65,9 @@ unsigned long Allocator::Free(MapNode map[], unsigned long size, unsigned long a
 			pLastNode->m_AddressIdx = pLastNode->m_Size = 0;
 		}
 	}
-	/* ÕâÀï´¦ÀíÁ½ÖÖÇé¿ö
-	 * 1) ÕýºÃÓëpNodeÏàÁÚÇÒpNode²»ÊÇÎÞÐ§µÄ£¬Ö»ÒªÐÞ¸ÄpNodeµÄAddressIdxÊôÐÔ¼´¿É
-	 * 2) Ç°ºó¶¼²»ÏàÁÚ£¬ÔòÐèÒª½«pNode¼°ÒÔºóµÄ½ÚµãÒÀ´ÎÏòºóÒÆ¶¯
+	/* ï¿½ï¿½ï¿½ï´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	 * 1) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pNodeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pNodeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½Ä£ï¿½Ö»Òªï¿½Þ¸ï¿½pNodeï¿½ï¿½AddressIdxï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½
+	 * 2) Ç°ï¿½ó¶¼²ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½pNodeï¿½ï¿½ï¿½Ôºï¿½Ä½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
 	 */
 	else
 	{
@@ -76,9 +76,9 @@ unsigned long Allocator::Free(MapNode map[], unsigned long size, unsigned long a
 			pNode->m_AddressIdx = addrIdx;
 			pNode->m_Size += size;
 		}
-		else if ( size ) //ºÏ·¨ÐÔÅÐ¶Ï
+		else if ( size ) //ï¿½Ï·ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
 		{
-			//´¦ÀíÌõ¼þ2)µÄÇé¿ö
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2)ï¿½ï¿½ï¿½ï¿½ï¿½
 			MapNode tmpNode1, tmpNode2;
 			tmpNode1.m_AddressIdx = addrIdx;
 			tmpNode1.m_Size = size;
@@ -94,10 +94,77 @@ unsigned long Allocator::Free(MapNode map[], unsigned long size, unsigned long a
 				tmpNode1.m_AddressIdx = tmpNode2.m_AddressIdx;
 				tmpNode1.m_Size = tmpNode2.m_Size;
 			}
-			/* ½«×îºóÒ»¸öÌîÈëpNodeÖÐ */
+			/* ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pNodeï¿½ï¿½ */
 			pNode->m_AddressIdx = tmpNode1.m_AddressIdx;
 			pNode->m_Size = tmpNode1.m_Size;
 		}
+	}
+	return 0;
+}
+
+// NOTE:1
+int BitMapAllocator::is_free(BitMap &bitmap, int index)
+{
+	return !(bitmap.map[index / 64] & (1ULL << (index % 64)));
+}
+
+void BitMapAllocator::set_bit(BitMap &bitmap, int index, int value)
+{
+	if (value)
+		bitmap.map[index / 64] |= (1ULL << (index % 64));
+	else
+		bitmap.map[index / 64] &= ~(1ULL << (index % 64));
+}
+
+BitMapAllocator BitMapAllocator::m_Instance_bitmap;
+
+BitMapAllocator &BitMapAllocator::GetInstance()
+{
+	return BitMapAllocator::m_Instance_bitmap;
+}
+
+unsigned long BitMapAllocator::Alloc(BitMap &bitmap, unsigned long size)
+{
+	unsigned long retIdx = 0;
+	int pages_needed = (size + M_PAGE_SIZE - 1) / M_PAGE_SIZE;
+
+	int start = -1, count = 0;
+	for (int i = 0; i < (bitmap.rows * 64); i++)
+	{
+		if (is_free(bitmap, i))
+		{
+			if (count == 0)
+				start = i;
+			count++;
+			if (count == pages_needed)
+				break;
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	if (count < pages_needed)
+		return 0;
+
+	for (int i = 0; i < pages_needed; i++)
+	{
+		set_bit(bitmap, start + i, 1);
+	}
+
+	retIdx = start * M_PAGE_SIZE + bitmap.m_AddressIdx;
+	return retIdx;
+}
+
+unsigned long BitMapAllocator::Free(BitMap &bitmap, unsigned long size, unsigned long addrIdx)
+{
+	int start_page = (addrIdx - bitmap.m_AddressIdx) / M_PAGE_SIZE;
+	int pages_to_free = (size + M_PAGE_SIZE - 1) / M_PAGE_SIZE;
+
+	for (int i = 0; i < pages_to_free; i++)
+	{
+		set_bit(bitmap, start_page + i, 0);
 	}
 	return 0;
 }

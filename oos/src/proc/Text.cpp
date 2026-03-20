@@ -3,34 +3,51 @@
 
 Text::Text()
 {
-	//nothing to do here
+	// nothing to do here
 }
 
 Text::~Text()
 {
-	//nothing to do here
+	// nothing to do here
 }
 
 void Text::XccDec()
 {
-	if ( this->x_ccount == 0 )
+	User &u = Kernel::Instance().GetUser();
+	PageTable *pUserPageTable = u.u_MemoryDescriptor.m_UserPageTableArray;
+	UserPageManager &userPageMgr = Kernel::Instance().GetUserPageManager();
+
+	if (this->x_ccount == 0)
 		return;
 
-	/* Èç¹ûx_ccountµÝ¼õÖÁ0£¬ÔòÊÍ·Å¸Ã¹²ÏíÕýÎÄ¶ÎÕ¼¾ÝµÄÄÚ´æ¡£*/
-	if ( --this->x_ccount == 0 )
+	--this->x_ccount;  	// ï¿½ï¿½ï¿½x_ccountï¿½Ý¼ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½Í·Å¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½Õ¼ï¿½Ýµï¿½ï¿½Ú´ï¿½
+
+	int index = u.u_MemoryDescriptor.m_DataStartAddress >> 12 - 1024;
+	int count = (u.u_MemoryDescriptor.m_DataSize + PageManager::PAGE_SIZE - 1) / PageManager::PAGE_SIZE;
+	int frame;
+	while (count)
 	{
-		Kernel::Instance().GetUserPageManager().FreeMemory(this->x_size, this->x_caddr);
+		if (this->x_ccount == 0)
+		{
+			frame = pUserPageTable->m_Entrys[index].m_PageBaseAddress;  // ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½
+			userPageMgr.FreeMemory(PageManager::PAGE_SIZE, frame << 12);
+		}
+		pUserPageTable->m_Entrys[index].m_Present = 0;				// ï¿½ï¿½ï¿½PTE
+		pUserPageTable->m_Entrys[index].m_ReadWriter = 0;
+		pUserPageTable->m_Entrys[index].m_UserSupervisor = 1;
+		pUserPageTable->m_Entrys[index].m_PageBaseAddress = 0;
+
+		index++;		count--;
 	}
 }
 
 void Text::XFree()
 {
+	/* ï¿½Í·ï¿½ï¿½Ú´ï¿½ï¿½ÐµÄ¸ï¿½ï¿½ï¿½ */
 	this->XccDec();
-	/* 
-	 * Èç¹ûÒýÓÃ¸Ã¹²ÏíÕýÎÄ¶ÎµÄ½ø³ÌÊýÎª0£¬½ø³Ì¶¼ÒÑÖÕÖ¹
-	 * ÔòÃ»ÓÐ±ØÒªÔÚ½»»»ÇøÉÏ±£´æ¹²ÏíÕýÎÄ¶ÎµÄ¸±±¾¡£
-	 */
-	if ( --this->x_count == 0 )
+
+	/* ï¿½Í·ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÄ¸ï¿½ï¿½ï¿½ */
+	if (--this->x_count == 0)
 	{
 		Kernel::Instance().GetSwapperManager().FreeSwap(this->x_size, this->x_daddr);
 		Kernel::Instance().GetFileManager().m_InodeTable->IPut(this->x_iptr);

@@ -41,7 +41,7 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 		for (i0 = textBegin; i0 < textBegin + textLength; i0++)
 			pointer[i0].m_ReadWriter = 1;
 
-		FlushPageDirectory();
+		FlushPageDirectory(0x200000);
 	}
 
     /* 对所有页面执行清0操作，这样bss变量的初值就是0 */
@@ -87,7 +87,7 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 		for (i0 = textBegin; i0 < textBegin + textLength; i0++)
 			pointer[i0].m_ReadWriter = 0;
 
-		FlushPageDirectory();
+		FlushPageDirectory(0x200000);
 	}
 
 	KernelPageManager& kpm = Kernel::Instance().GetKernelPageManager();
