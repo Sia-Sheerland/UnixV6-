@@ -12,10 +12,10 @@ PEParser::PEParser()
     this->sectionHeaders = 0;
 }
 
-/* Ô­À´V6++µÄPEParser */
+/* Ô­ï¿½ï¿½V6++ï¿½ï¿½PEParser */
 PEParser::PEParser(unsigned long peAddress)
 {
-	this->peAddress = peAddress + 0xC0000000;   // peÍ·µÄÐéµØÖ·
+	this->peAddress = peAddress + 0xC0000000;   // peÍ·ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
 }
 
 unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
@@ -26,25 +26,25 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 	unsigned int i = 0;
 	unsigned int i0 = 0;
 
-	/* Èç¹û¿ÉÒÔºÍÆäËü½ø³Ì¹²ÏíÕýÎÄ¶Î£¬ÎÞÐèÎÄ¼þÖÐ¶ÁÈëÕýÎÄ¶Î */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ */
 	PageTable* pUserPageTable = Machine::Instance().GetUserPageTableArray();
 	unsigned int textBegin = this->TextAddress >> 12 , textLength = this->TextSize >> 12;
 	PageTableEntry* pointer = (PageTableEntry *)pUserPageTable;
 
-	/*Èç¹ûÓëÆäËü½ø³Ì¹²ÏíÕýÎÄ¶Î£¬¹²ÏíÕýÎÄ¶ÎÇÐ²»¿ÉÇå0*/
+	/*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½0*/
 	if(sharedText == 1)
-		i = 1;      // iÊÇ¶ÎÍ·Ë÷Òý
+		i = 1;      // iï¿½Ç¶ï¿½Í·ï¿½ï¿½ï¿½ï¿½
 	else
 	{
 		i = 0;
-		// ÐÞ¸ÄÕýÎÄ¶ÎµÄ¶ÁÐ´±êÖ¾£¬ÎªÄÚºËÐ´´úÂë¶Î×ö×¼±¸
+		// ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½Ä¶ÎµÄ¶ï¿½Ð´ï¿½ï¿½Ö¾ï¿½ï¿½Îªï¿½Úºï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½
 		for (i0 = textBegin; i0 < textBegin + textLength; i0++)
 			pointer[i0].m_ReadWriter = 1;
 
 		FlushPageDirectory();
 	}
 
-    /* ¶ÔËùÓÐÒ³ÃæÖ´ÐÐÇå0²Ù×÷£¬ÕâÑùbss±äÁ¿µÄ³õÖµ¾ÍÊÇ0 */
+    /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bssï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Öµï¿½ï¿½ï¿½ï¿½0 */
 	for (; i <= this->BSS_SECTION_IDX; i++ )
 	{
 		ImageSectionHeader* sectionHeader = &(this->sectionHeaders[i]);
@@ -59,11 +59,11 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 		}
 	}
 
-	/* ¶ÁÕýÎÄ¶Î£¨optional£©£»¶ÁÎÄ¼þ£¬µÃÈ«¾Ö±äÁ¿µÄ³õÖµ  */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Î£ï¿½optionalï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Öµ  */
  	if(sharedText == 1)
-		i = 1;      // iÊÇ¶ÎÍ·Ë÷Òý
+		i = 1;      // iï¿½Ç¶ï¿½Í·ï¿½ï¿½ï¿½ï¿½
 	else
-	// ÐÞ¸ÄÕýÎÄ¶ÎµÄ¶ÁÐ´±êÖ¾£¬ÎªÄÚºËÐ´´úÂë¶Î×ö×¼±¸
+	// ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½Ä¶ÎµÄ¶ï¿½Ð´ï¿½ï¿½Ö¾ï¿½ï¿½Îªï¿½Úºï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½
 		i = 0;
 
 	for ( ; i < this->BSS_SECTION_IDX; i++ )
@@ -83,7 +83,7 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 	}
 
 	if(sharedText == 0)
-	{   //½«ÕýÎÄ¶ÎÒ³Ãæ¸Ä»ØÖ»¶Á
+	{   //ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½Ò³ï¿½ï¿½Ä»ï¿½Ö»ï¿½ï¿½
 		for (i0 = textBegin; i0 < textBegin + textLength; i0++)
 			pointer[i0].m_ReadWriter = 0;
 
@@ -97,7 +97,7 @@ unsigned int PEParser::Relocate(Inode* p_inode, int sharedText)
 	return 	cnt;
 }
 
-/* Ô­À´V6++Ê¹ÓÃµÄ´úÂë£¬ÏÖ·ÏÆú²»ÓÃÁË */
+/* Ô­ï¿½ï¿½V6++Ê¹ï¿½ÃµÄ´ï¿½ï¿½ë£¬ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 unsigned int PEParser::Relocate()
 {
 	unsigned long srcAddress, desAddress;
@@ -122,13 +122,13 @@ bool PEParser::HeaderLoad(Inode* p_inode)
     User& u = Kernel::Instance().GetUser();
     KernelPageManager& kpm = Kernel::Instance().GetKernelPageManager();
 
-    /*¶ÁÈ¡dos header*/
+    /*ï¿½ï¿½È¡dos header*/
     u.u_IOParam.m_Base = (unsigned char*)&dos_header;
     u.u_IOParam.m_Offset = 0;
     u.u_IOParam.m_Count = 0x40;
     p_inode->ReadI();
 
-    /*¶ÁÈ¡nt_Header*/
+    /*ï¿½ï¿½È¡nt_Header*/
     u.u_IOParam.m_Base = (unsigned char*)(&this->ntHeader);
     u.u_IOParam.m_Offset = dos_header.e_lfanew;
     u.u_IOParam.m_Count = ntHeader_size;
@@ -146,8 +146,8 @@ bool PEParser::HeaderLoad(Inode* p_inode)
     p_inode->ReadI();
 
     /*
-    	 * @comment ÕâÀïhardcode gccµÄÂß¼­
-    	 * section Ë³ÐòÎª .text->.data->.rdata->.bss
+    	 * @comment ï¿½ï¿½ï¿½ï¿½hardcode gccï¿½ï¿½ï¿½ß¼ï¿½
+    	 * section Ë³ï¿½ï¿½Îª .text->.data->.rdata->.bss
     	 *
     */
 	this->TextAddress =
@@ -164,6 +164,17 @@ bool PEParser::HeaderLoad(Inode* p_inode)
 
     EntryPointAddress = ntHeader.OptionalHeader.AddressOfEntryPoint +
                     ntHeader.OptionalHeader.ImageBase;
+
+    /* è®°å½•å„èŠ‚çš„æ–‡ä»¶åç§»å’Œè™šæ‹Ÿåœ°å€ï¼Œä¾›ç¼ºé¡µè°ƒé¡µä½¿ç”¨ */
+    NumSections = ntHeader.FileHeader.NumberOfSections;
+    if (NumSections > MAX_SECTIONS) NumSections = MAX_SECTIONS;
+    for (unsigned int s = 0; s < NumSections; s++) {
+        SectionFileOffset[s] = sectionHeaders[s].PointerToRawData;
+        SectionVirtAddr[s]   = sectionHeaders[s].VirtualAddress
+                               + ntHeader.OptionalHeader.ImageBase;
+        SectionVirtSize[s]   = sectionHeaders[s].Misc.VirtualSize;
+        SectionRawSize[s]    = sectionHeaders[s].SizeOfRawData;
+    }
 
 	return true;
 }

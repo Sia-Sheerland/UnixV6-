@@ -3,10 +3,15 @@
 #include "Utility.h"
 #include "Video.h"
 #include "Machine.h"
+#include "VmAreaStruct.h"
+#include "PageRefCount.h"
+#include "MemoryDescriptor.h"
+#include "PageManager.h"
+#include "File.h"
 
 /* 
- * ÉùÃ÷INT 0 - INT 31ºÅÒì³£ÔÚIDTÖĞµÄÈë¿Úº¯Êı(Entrance)
- * -->ÎŞ³ö´íÂë<-- µÄÒì³£
+ * ï¿½ï¿½ï¿½ï¿½INT 0 - INT 31ï¿½ï¿½ï¿½ì³£ï¿½ï¿½IDTï¿½Ğµï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½(Entrance)
+ * -->ï¿½Ş³ï¿½ï¿½ï¿½ï¿½ï¿½<-- ï¿½ï¿½ï¿½ì³£
  */
 #define IMPLEMENT_EXCEPTION_ENTRANCE(Exception_Entrance, Exception_Handler) \
 void Exception::Exception_Entrance() \
@@ -25,11 +30,11 @@ void Exception::Exception_Entrance() \
 }
 
 /* 
- * ÉùÃ÷INT 0 - INT 31ºÅÒì³£ÔÚIDTÖĞµÄÈë¿Úº¯Êı(Entrance)
- * -->ÓĞ³ö´íÂë(ErrCode)<-- µÄÒì³£
- * ÓÉÓÚ³ö´íÂë±ØĞëÔÚiretÖĞ¶Ï·µ»ØÖ¸ÁîÖ®Ç°ÊÖ¶¯´ÓÕ»ÉÏµ¯³ö£¬
- * ËùÒÔÓĞ³ö´íÂëµÄÇé¿öÏÂ£¬ÔÚleaveÖ¸ÁîÏú»ÙÕ»Ö¡ºó£¬ÔÙÌø¹ı
- * Õ»ÉÏµÄ4¸ö×Ö½Ú³ö´íÂë¡£
+ * ï¿½ï¿½ï¿½ï¿½INT 0 - INT 31ï¿½ï¿½ï¿½ì³£ï¿½ï¿½IDTï¿½Ğµï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½(Entrance)
+ * -->ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½(ErrCode)<-- ï¿½ï¿½ï¿½ì³£
+ * ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iretï¿½Ğ¶Ï·ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ö®Ç°ï¿½Ö¶ï¿½ï¿½ï¿½Õ»ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½leaveÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * Õ»ï¿½Ïµï¿½4ï¿½ï¿½ï¿½Ö½Ú³ï¿½ï¿½ï¿½ï¿½ë¡£
  */
 #define IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(Exception_Entrance, Exception_Handler) \
 void Exception::Exception_Entrance() \
@@ -51,33 +56,33 @@ void Exception::Exception_Entrance() \
 
 /*
 	=========================
-	¶ÔÉÏÃæ´úÂëµÄÁíÒ»µãËµÃ÷£º
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½
 	=========================
-	Ä¿Ç°£¬ÓÉÓÚÎÒÃÇÔÚIMPLEMENT_EXCEPTION_ENTRANCE_ERRCODEºÍIMPLEMENT_EXCEPTION_ENTRANCEÖĞ²ÉÓÃµÄ¶¼ÊÇ
-	Inline Assembly£¬Ã»ÓĞÉùÃ÷ÈÎºÎÁÙÊ±¡¢¾Ö²¿±äÁ¿(Èçint i, j;Ö®ÀàµÄÓï¾ä)»òÕßº¯Êıµ÷ÓÃ£¬ËùÒÔÈë¿Úº¯Êı(Entrance)ÖĞ³ıÁËÔÚÕ»ÉÏÑ¹
-	ÈëebpÖ®Íâ£¬Ã»ÓĞÔÚÕ»ÉÏ·ÖÅäÈÎºÎ¶àÓàµÄ×Ö½Ú£¬·ñÔò¾Í¿ÉÄÜ³öÏÖÏÂÃæµÄÇé¿ö£º
+	Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODEï¿½ï¿½IMPLEMENT_EXCEPTION_ENTRANCEï¿½Ğ²ï¿½ï¿½ÃµÄ¶ï¿½ï¿½ï¿½
+	Inline Assemblyï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½int i, j;Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½(Entrance)ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½Ñ¹
+	ï¿½ï¿½ebpÖ®ï¿½â£¬Ã»ï¿½ï¿½ï¿½ï¿½Õ»ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ÎºÎ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½Ü³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
 	EFLAGS
 	CS
 	EIP
 	[ERRORCODE]	//Optional
 	ebp
-	xx×Ö½Ú¿Õ¼ä  	<--¡±ÁÙÊ±¡¢¾Ö²¿±äÁ¿Õ¼ÓÃµÄ¶ÑÕ»¿Õ¼ä¡°  
+	xxï¿½Ö½Ú¿Õ¼ï¿½  	<--ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ÃµÄ¶ï¿½Õ»ï¿½Õ¼ä¡°  
 	SaveContext();
 	
-	Õâ»áµ¼ÖÂÈç¹û´òËã²ÉÓÃÄ³Ò»¸ö½á¹¹Ìå£¬Èçpt_regsÀ´°üÀ¨Í¨ÓÃ¼Ä´æÆ÷(eax,ebx...µÈ)ºÍERRORCODE£¬eip£¬cs£¬eflagsµÄÈ«²¿×Ö¶Î£¬
-	ÄÇÃ´ÔÚSaveContext()²¿·Ö×Ö¶ÎºÍERRORCODE£¬eip£¬cs£¬eflagsÖ®¼ä¼äÏ¶Ó¦¸ÃÔ¤Áô¶àÉÙ×Ö½ÚµÄÌî³ä×Ö¶Î(padding)£¿½á¹¹ÌåÖĞÓ¦¸Ã
-	Ô¤Áô¶àÉÙ×Ö½Ú³¤¶ÈµÄÌî³ä×Ö¶ÎÊÇÎŞ·¨Ô¤ÏÈ¼ÆËãµÃµ½µÄ£¬¶øÇÒ³¤¶È»áËæ×Åº¯ÊıÖĞÉùÃ÷¾Ö²¿±äÁ¿¶àÉÙ¶øÓÉ±àÒëÆ÷×Ô¶¯È·¶¨¡£
-	ÎÒÃÇ²¢Ã»ÓĞÖ»²ÉÓÃÒ»¸ö½á¹¹Ìåpt_regsÀ´°üÀ¨È«²¿µÄ×Ö¶Î£¬¶øÊÇ²ÉÓÃÁËpt_regsºÍpt_contextÁ½¸ö×Ö¶Î£»pt_regs°üº¬ÁËÍ¨ÓÃ¼Ä´æÆ÷
-	ÖĞµÄÏÖ³¡ĞÅÏ¢£¬¶øpt_contextÔò°üÀ¨ÁËÖĞ¶ÏÒşÖ¸Áî±£´æµÄÏÖ³¡(eflags£¬cs£¬eipºÍ[ERRORCODE])¡£´ËÍâ£¬ÔÚSaveContext()ºêµÄÊµ
-	ÏÖÖĞ£¬²ÉÓÃ
+	ï¿½ï¿½áµ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³Ò»ï¿½ï¿½ï¿½á¹¹ï¿½å£¬ï¿½ï¿½pt_regsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ã¼Ä´ï¿½ï¿½ï¿½(eax,ebx...ï¿½ï¿½)ï¿½ï¿½ERRORCODEï¿½ï¿½eipï¿½ï¿½csï¿½ï¿½eflagsï¿½ï¿½È«ï¿½ï¿½ï¿½Ö¶Î£ï¿½
+	ï¿½ï¿½Ã´ï¿½ï¿½SaveContext()ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Îºï¿½ERRORCODEï¿½ï¿½eipï¿½ï¿½csï¿½ï¿½eflagsÖ®ï¿½ï¿½ï¿½Ï¶Ó¦ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½Úµï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½(padding)ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
+	Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½Ú³ï¿½ï¿½Èµï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½Ş·ï¿½Ô¤ï¿½È¼ï¿½ï¿½ï¿½Ãµï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½Åºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½É±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½È·ï¿½ï¿½ï¿½ï¿½
+	ï¿½ï¿½ï¿½Ç²ï¿½Ã»ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½pt_regsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½pt_regsï¿½ï¿½pt_contextï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½pt_regsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ã¼Ä´ï¿½ï¿½ï¿½
+	ï¿½Ğµï¿½ï¿½Ö³ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½pt_contextï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½Ö¸ï¿½î±£ï¿½ï¿½ï¿½ï¿½Ö³ï¿½(eflagsï¿½ï¿½csï¿½ï¿½eipï¿½ï¿½[ERRORCODE])ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½SaveContext()ï¿½ï¿½ï¿½Êµ
+	ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	=========================
-	¹ØÓÚleaveÖ¸ÁîµÄÒ»µãËµÃ÷£º
+	ï¿½ï¿½ï¿½ï¿½leaveÖ¸ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½
 	=========================
-	²»ÒËÔÚX86AssemblyÀàÖĞÊµÏÖ¶ÔleaveºÍiretÖ¸Áî·â×°µÄº¯Êı¡£
-	¶ÔleaveºÍiretÕâ2ÌõÖ¸Áî½øĞĞº¯Êı·â×°£¬ÔÚµ÷ÓÃÊ±»á²úÉúÒ»Ğ©ÎÊÌâ£¬ËùÒÔÉÏÃæµÄ**Entrance()ºêÀïÃæÖ±½ÓÊ¹ÓÃºê·â×°µÄÄÚÁª»ã±à¡£	
-	X86Assembly::Leave()º¯ÊıµÄ·´»ã±à½á¹û½«»áÈçÏÂ£º
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½X86Assemblyï¿½ï¿½ï¿½ï¿½Êµï¿½Ö¶ï¿½leaveï¿½ï¿½iretÖ¸ï¿½ï¿½ï¿½×°ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½
+	ï¿½ï¿½leaveï¿½ï¿½iretï¿½ï¿½2ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ğºï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ğ©ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½**Entrance()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½Ãºï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à¡£	
+	X86Assembly::Leave()ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½
 	
 	push   %ebp
 	mov    %esp,%ebp
@@ -85,44 +90,44 @@ void Exception::Exception_Entrance() \
 	pop    %ebp
 	ret
 
-	leaveÖ¸ÁîµÈ¼ÛÓÚ2ÌõÖ¸Áî: mov %ebp, %esp; pop ebp; Æä×÷ÓÃÊÇÏú»Ùµ±Ç°º¯Êıµ÷ÓÃµÄÕ»Ö¡£¬ÕâÀïX86Assembly::Leave()º¯ÊıÖĞµÄleave
-	Ö¸ÁîÏú»ÙµÄÊÇÎÒÃÇµ÷ÓÃX86Assembly::Leave()²úÉúµÄÕ»Ö¡¡£Õâ²¢·ÇÎÒÃÇµÄ±¾Òâ£¬ÎÒÃÇÔÚRestoreContext();Ö®ºóÊ¹ÓÃleaveÖ¸ÁîµÄÄ¿µÄÊÇ£¬
-	µ±Î»ÓÚÕ»¶¥µÄÊÇebpÊ±(¼´Òì³£Èë¿Úº¯Êı(Entrance)±àÒëÉú³ÉµÄµÚÒ»ÌõÖ¸ÁîÑ¹ÈëµÄebp)£¬ÓÃleaveÖ¸ÁîÊ¹µÃebp´ÓÕ»ÖĞµ¯³öÒÔ¼°»Ö¸´esp£¬´Ó¶øÏú»Ù
-	Òì³£Èë¿Úº¯Êı(Entrance)µÄÕ»Ö¡¡£
-	Òò¶ø£¬Ä¿Ç°Î¨Ò»µÄ½â¾ö°ì·¨ÊÇÖ±½ÓÓÃInline Assembly£¬¶ø²»¶ÔleaveÖ¸Áî½øĞĞº¯Êı·â×°¡£
+	leaveÖ¸ï¿½ï¿½È¼ï¿½ï¿½ï¿½2ï¿½ï¿½Ö¸ï¿½ï¿½: mov %ebp, %esp; pop ebp; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ùµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½Õ»Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½X86Assembly::Leave()ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½leave
+	Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½X86Assembly::Leave()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»Ö¡ï¿½ï¿½ï¿½â²¢ï¿½ï¿½ï¿½ï¿½ï¿½ÇµÄ±ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½RestoreContext();Ö®ï¿½ï¿½Ê¹ï¿½ï¿½leaveÖ¸ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½Ç£ï¿½
+	ï¿½ï¿½Î»ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ebpÊ±(ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Úºï¿½ï¿½ï¿½(Entrance)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉµÄµï¿½Ò»ï¿½ï¿½Ö¸ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ebp)ï¿½ï¿½ï¿½ï¿½leaveÖ¸ï¿½ï¿½Ê¹ï¿½ï¿½ebpï¿½ï¿½Õ»ï¿½Ğµï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ö¸ï¿½espï¿½ï¿½ï¿½Ó¶ï¿½ï¿½ï¿½ï¿½ï¿½
+	ï¿½ì³£ï¿½ï¿½Úºï¿½ï¿½ï¿½(Entrance)ï¿½ï¿½Õ»Ö¡ï¿½ï¿½
+	ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Ç°Î¨Ò»ï¿½Ä½ï¿½ï¿½ï¿½ì·¨ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Inline Assemblyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½leaveÖ¸ï¿½ï¿½ï¿½ï¿½Ğºï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½
 	
 	=========================
-	¹ØÓÚiretÖ¸ÁîµÄÒ»µãËµÃ÷£º
+	ï¿½ï¿½ï¿½ï¿½iretÖ¸ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½
 	=========================
-	ÎÒÃÇĞèÒªÔÚµ±Õ»¶¥´æ·ÅµÄÔªËØÒÀ´ÎÊÇ:
+	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Úµï¿½Õ»ï¿½ï¿½ï¿½ï¿½Åµï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:
 	SS
 	ESP
 	EFLAGS
 	CS
-	EIP	<--  µ±Ç°Õ»¶¥Î»ÖÃ
+	EIP	<--  ï¿½ï¿½Ç°Õ»ï¿½ï¿½Î»ï¿½ï¿½
 	
-	²Å¿ÉÒÔÊ¹ÓÃiretÖ¸Áî´ÓÖĞ¶Ï·µ»Ø£¬¶ø¶ÔiretÖ¸Áî½øĞĞ·â×°X86Assembly::IRet()µÄ½á¹ûÔòÊÇ£¬¶ÑÕ»Çé¿öÈçÏÂ£º
+	ï¿½Å¿ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½iretÖ¸ï¿½ï¿½ï¿½ï¿½Ğ¶Ï·ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½iretÖ¸ï¿½ï¿½ï¿½ï¿½Ğ·ï¿½×°X86Assembly::IRet()ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½
 	SS
 	ESP
 	EFLAGS
 	CS
 	EIP	
-	ebp	<--  µ±Ç°Õ»¶¥Î»ÖÃ£¬ ebpÊÇX86Assembly::IRet()º¯ÊıµÚÒ»ÌõÖ¸ÁîÑ¹ÈëµÄ
-	ÔÚÒÔebpÎªÕ»¶¥µÄÇé¿öÏÂ½øĞĞiret£¬»á·¢ÉúÑÏÖØ´íÎó£¬´íÎóµØ°Ñebpµ±³ÉEIP, EIPµ±³ÉCS£¬Ö´ĞĞiretÖ¸Áî½«µ¼ÖÂÏµÍ³±ÀÀ£¡£
+	ebp	<--  ï¿½ï¿½Ç°Õ»ï¿½ï¿½Î»ï¿½Ã£ï¿½ ebpï¿½ï¿½X86Assembly::IRet()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ö¸ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½
+	ï¿½ï¿½ï¿½ï¿½ebpÎªÕ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½iretï¿½ï¿½ï¿½á·¢ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ó£¬´ï¿½ï¿½ï¿½Ø°ï¿½ebpï¿½ï¿½ï¿½ï¿½EIP, EIPï¿½ï¿½ï¿½ï¿½CSï¿½ï¿½Ö´ï¿½ï¿½iretÖ¸ï¿½î½«ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 
 
 /* 
- * ¶¨ÒåINT 0 - INT 31ºÅÒì³£´¦Àíº¯Êı(Handler)µÄ2¸öºê¡£
+ * ï¿½ï¿½ï¿½ï¿½INT 0 - INT 31ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(Handler)ï¿½ï¿½2ï¿½ï¿½ï¿½ê¡£
  * 
  * (1)	IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(Exception_Handler, Error_Message, Signal_Value)
- * ¶ÔÓ¦ÓĞ³ö´íÂëµÄÇé¿ö£¬µÚ¶ş¸ö²ÎÊıÊ¹ÓÃstruct pte_context* context;
+ * ï¿½ï¿½Ó¦ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½struct pte_context* context;
  * 
  * (2)	IMPLEMENT_EXCEPTION_HANDLER(Exception_Handler, Error_Message, Signal_Value)
- * ¶ÔÓ¦ÎŞ³ö´íÂëµÄÇé¿ö£¬µÚ¶ş¸ö²ÎÊıÊ¹ÓÃstruct pt_context* context;
+ * ï¿½ï¿½Ó¦ï¿½Ş³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½struct pt_context* context;
  * 
- * Á½¸öºêµÄÇø±ğ¾ÍÔÚÓÚµÚ¶ş²ÎÊıÊÇ°üº¬error_codeµÄ½á¹¹Ìåpte_context, »¹ÊÇÃ»ÓĞ
- * error_code×Ö¶ÎµÄ½á¹¹Ìåpt_context!
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÚ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½error_codeï¿½Ä½á¹¹ï¿½ï¿½pte_context, ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½
+ * error_codeï¿½Ö¶ÎµÄ½á¹¹ï¿½ï¿½pt_context!
  */
 
 #define IMPLEMENT_EXCEPTION_HANDLER(Exception_Handler, Error_Message, Signal_Value) \
@@ -173,92 +178,240 @@ Exception::~Exception()
 }
 
 
-//³ıÁã´í(INT 0)
+//ï¿½ï¿½ï¿½ï¿½ï¿½(INT 0)
 IMPLEMENT_EXCEPTION_ENTRANCE(DivideErrorEntrance, DivideError)
 IMPLEMENT_EXCEPTION_HANDLER(DivideError, "Divide Exception!", User::SIGFPE)
 
 
-//µ÷ÊÔÒì³£(INT 1)
+//ï¿½ï¿½ï¿½ï¿½ï¿½ì³£(INT 1)
 IMPLEMENT_EXCEPTION_ENTRANCE(DebugEntrance, Debug)
 IMPLEMENT_EXCEPTION_HANDLER(Debug, "Debug Exception!", User::SIGTRAP)
 
 
-//NMI·ÇÆÁ±ÎÖĞ¶Ï(INT 2)
+//NMIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½(INT 2)
 IMPLEMENT_EXCEPTION_ENTRANCE(NMIEntrance, NMI)
 IMPLEMENT_EXCEPTION_HANDLER(NMI, "Non-maskable Interrupt!", User::SIGNUL)
 
 
-//µ÷ÊÔ¶Ïµã(INT 3)
+//ï¿½ï¿½ï¿½Ô¶Ïµï¿½(INT 3)
 IMPLEMENT_EXCEPTION_ENTRANCE(BreakpointEntrance, Breakpoint)
 IMPLEMENT_EXCEPTION_HANDLER(Breakpoint, "Breakpoint Exception!", User::SIGTRAP)
 
 
-//Òç³ö(INT 4)
+//ï¿½ï¿½ï¿½(INT 4)
 IMPLEMENT_EXCEPTION_ENTRANCE(OverflowEntrance, Overflow)
 IMPLEMENT_EXCEPTION_HANDLER(Overflow, "Overflow Exception!", User::SIGSEGV)
 
 
-//BOUNDÖ¸ÁîÒì³£(INT 5)
+//BOUNDÖ¸ï¿½ï¿½ï¿½ì³£(INT 5)
 IMPLEMENT_EXCEPTION_ENTRANCE(BoundEntrance, Bound)
 IMPLEMENT_EXCEPTION_HANDLER(Bound, "Bound Range Exceeded!", User::SIGSEGV)
 
 
-//ÎŞĞ§²Ù×÷Âë(INT 6)
+//ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(INT 6)
 IMPLEMENT_EXCEPTION_ENTRANCE(InvalidOpcodeEntrance, InvalidOpcode)
 IMPLEMENT_EXCEPTION_HANDLER(InvalidOpcode, "Invalid Opcode!", User::SIGILL)
 
 
-//Éè±¸²»¿ÉÓÃ(INT 7)
+//ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(INT 7)
 IMPLEMENT_EXCEPTION_ENTRANCE(DeviceNotAvailableEntrance, DeviceNotAvailable)
 IMPLEMENT_EXCEPTION_HANDLER(DeviceNotAvailable, "Device Not Available!", User::SIGSEGV)
 
 
-//Ë«ÖØ´íÎó(INT 8)  *ÓĞ³ö´íÂë*
+//Ë«ï¿½Ø´ï¿½ï¿½ï¿½(INT 8)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(DoubleFaultEntrance, DoubleFault)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(DoubleFault, "Double Fault Exception!", User::SIGSEGV)
 
 
-//Ğ­´¦ÀíÆ÷¶ÎÔ½½ç(INT 9)
+//Ğ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½(INT 9)
 IMPLEMENT_EXCEPTION_ENTRANCE(CoprocessorSegmentOverrunEntrance, CoprocessorSegmentOverrun)
 IMPLEMENT_EXCEPTION_HANDLER(CoprocessorSegmentOverrun, "Coprocessor Segment Overrun!", User::SIGFPE)
 
 
-//ÎŞĞ§TSS(INT 10)  *ÓĞ³ö´íÂë*
+//ï¿½ï¿½Ğ§TSS(INT 10)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(InvalidTSSEntrance, InvalidTSS)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(InvalidTSS, "Invalid TSS!", User::SIGSEGV)
 
 
-//¶Î²»´æÔÚ(INT 11)  *ÓĞ³ö´íÂë*
+//ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½(INT 11)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(SegmentNotPresentEntrance, SegmentNotPresent)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(SegmentNotPresent, "Segment Not Present!", User::SIGBUS)
 
 
-//¶ÑÕ»¶Î´íÎó(INT 12)  *ÓĞ³ö´íÂë*
+//ï¿½ï¿½Õ»ï¿½Î´ï¿½ï¿½ï¿½(INT 12)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(StackSegmentErrorEntrance, StackSegmentError)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(StackSegmentError, "Stack Segment Error!", User::SIGBUS)
 
 
-//Ò»°ã±£»¤ĞÔÒì³£(INT 13)  *ÓĞ³ö´íÂë*
+//Ò»ï¿½ã±£ï¿½ï¿½ï¿½ï¿½ï¿½ì³£(INT 13)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(GeneralProtectionEntrance, GeneralProtection)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(GeneralProtection, "General Protection!", User::SIGSEGV)
 
 
 
-//È±Ò³Òì³£(INT 14)  *ÓĞ³ö´íÂë*
+//È±Ò³ï¿½ì³£(INT 14)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(PageFaultEntrance, PageFault)
 //IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(PageFault, "Page Fault!", User::SIGSEGV)
 
 void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
 {
-
-	User& u = Kernel::Instance().GetUser();
-	Process* current = u.u_procp;
-	MemoryDescriptor& md = u.u_MemoryDescriptor;
+	User&             u       = Kernel::Instance().GetUser();
+	Process*          current = u.u_procp;
+	MemoryDescriptor& md      = u.u_MemoryDescriptor;
 
 	unsigned int cr2;
-	__asm__ __volatile__(" mov %%cr2, %0":"=r"(cr2) );
+	__asm__ __volatile__("mov %%cr2, %0" : "=r"(cr2));
 
-    /*ÓÉÈ±Ò³Òì³£´¦Àí³ÌĞòÃ¿´ÎÀ©Õ¹Ò»Ò³£¬Èç¹ûºÏÀíµÄÈ±ÁË¶àÕÅ¶ÑÕ»Ò³Ãæ£¬ÄÇ¾Í¶àÖ´ĞĞ¼¸´ÎÈ±Ò³Òì³££¬Ö±µ½°ÑÕâĞ©Ò³Ãæ²¹Æë*/
+	/* error_code ç”±ç¡¬ä»¶å‹æ ˆï¼Œé€šè¿‡ context->error_code å–å¾— */
+	bool isWrite = (context->error_code & 0x2) != 0;
+
+	/* åªå¤„ç†ç”¨æˆ·æ€ç¼ºé¡µï¼›å†…æ ¸æ€ç¼ºé¡µç›´æ¥ panic */
+	if ((context->xcs & USER_MODE) != USER_MODE) {
+		Diagnose::Write("Kernel PageFault CR2=%x EIP=%x\n", cr2, context->eip);
+		Utility::Panic("Page Fault in Kernel Mode.");
+		return;
+	}
+
+	unsigned long pageVA = (unsigned long)cr2 & ~0xFFFu;
+
+	/* â‘  æŸ¥æ‰¾ VMA */
+	VmAreaStruct* vma = md.FindVma(cr2);
+
+	if (!vma) {
+		/* æ£€æŸ¥æ˜¯å¦ä¸ºæ ˆæ‰©å±• */
+		unsigned long stackBase = MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize;
+		if (cr2 < stackBase && cr2 >= stackBase - PageManager::PAGE_SIZE
+		    && md.m_DataSize + md.m_StackSize + PageManager::PAGE_SIZE
+		       < MemoryDescriptor::USER_SPACE_SIZE - md.m_DataStartAddress) {
+			current->SStack();
+			return;
+		}
+		Diagnose::Write("SIGSEGV: no VMA for %x\n", cr2);
+		current->PSignal(User::SIGSEGV);
+		if (current->IsSig())
+			current->PSig((pt_context*)&context->eip);
+		return;
+	}
+
+	/* ä¿æŠ¤æ£€æŸ¥ï¼šå‘åªè¯»åŒºå†™ */
+	if (isWrite && !(vma->vm_prot & VM_PROT_WRITE)) {
+		Diagnose::Write("SIGSEGV: write to R/O VMA at %x\n", cr2);
+		current->PSignal(User::SIGSEGV);
+		if (current->IsSig())
+			current->PSig((pt_context*)&context->eip);
+		return;
+	}
+
+	PageTableEntry& spte = md.GetPTE(pageVA);
+	UserPageManager& upm = Kernel::Instance().GetUserPageManager();
+
+	/* â‘¡ æƒ…å½¢ Aï¼šPTE ä¸ºç©ºï¼ˆé¦–æ¬¡è®¿é—®ï¼‰ */
+	if (!spte.m_Present && spte.m_PageBaseAddress == 0) {
+		unsigned long physPage = upm.AllocMemory(PageManager::PAGE_SIZE);
+		if (!physPage) {
+			Diagnose::Write("PageFault OOM\n");
+			current->PSignal(User::SIGSEGV);
+			if (current->IsSig())
+				current->PSig((pt_context*)&context->eip);
+			return;
+		}
+		PageRefCount::Set(physPage, 1);
+
+		bool writable = (vma->vm_prot & VM_PROT_WRITE) != 0;
+		/* å…ˆæ˜ å°„ï¼Œå†é€šè¿‡ç”¨æˆ·è™šæ‹Ÿåœ°å€æ¸…é›¶/è¯»æ–‡ä»¶ */
+		md.MapPageDirect(pageVA, physPage >> 12, writable);
+
+		/* æ¸…é›¶ */
+		unsigned char* uva = (unsigned char*)pageVA;
+		for (int i = 0; i < (int)PageManager::PAGE_SIZE; i++) uva[i] = 0;
+
+		/* æ–‡ä»¶æ”¯æ’‘çš„ VMAï¼šä»æ–‡ä»¶è¯»å…¥æ•°æ® */
+		if (vma->vm_inode && vma->f_len > 0) {
+			unsigned long offInVma = pageVA - vma->vm_start;
+			if (offInVma < vma->f_len) {
+				unsigned long toRead = vma->f_len - offInVma;
+				if (toRead > PageManager::PAGE_SIZE)
+					toRead = PageManager::PAGE_SIZE;
+				IOParameter saved = u.u_IOParam;
+				u.u_IOParam.m_Base   = uva;
+				u.u_IOParam.m_Offset = (int)(vma->f_start + offInVma);
+				u.u_IOParam.m_Count  = (int)toRead;
+				vma->vm_inode->ReadI();
+				u.u_IOParam = saved;
+			}
+		}
+		return;
+	}
+
+	/* â‘¢ æƒ…å½¢ Bï¼šP=0 ä½† PageBaseAddress éé›¶ï¼ˆæ¢å‡ºåˆ° Swapï¼‰ */
+	if (!spte.m_Present && spte.m_PageBaseAddress != 0) {
+		unsigned long physPage = upm.AllocMemory(PageManager::PAGE_SIZE);
+		if (!physPage) {
+			current->PSignal(User::SIGSEGV);
+			if (current->IsSig())
+				current->PSig((pt_context*)&context->eip);
+			return;
+		}
+		PageRefCount::Set(physPage, 1);
+		int blkno = (int)spte.m_PageBaseAddress;
+		bool writable = (vma->vm_prot & VM_PROT_WRITE) != 0;
+		md.MapPageDirect(pageVA, physPage >> 12, writable);
+		Kernel::Instance().GetBufferManager().Swap(
+			blkno, physPage, PageManager::PAGE_SIZE, Buf::B_READ);
+		Kernel::Instance().GetSwapperManager().FreeSwap(
+			PageManager::PAGE_SIZE, blkno);
+		return;
+	}
+
+	/* â‘£ æƒ…å½¢ Cï¼šå†™æ—¶å¤åˆ¶ï¼ˆP=1 ä½† R/Oï¼Œå†™æ“ä½œè§¦å‘ï¼‰ */
+	if (spte.m_Present && isWrite && !spte.m_ReadWriter) {
+		unsigned long oldPhys = (unsigned long)spte.m_PageBaseAddress << 12;
+		unsigned char refCnt  = PageRefCount::Get(oldPhys);
+
+		if (refCnt > 1) {
+			/* å…±äº«é¡µï¼šåˆ†é…æ–°é¡µå¹¶å¤åˆ¶å†…å®¹ */
+			unsigned long newPage = upm.AllocMemory(PageManager::PAGE_SIZE);
+			if (!newPage) {
+				current->PSignal(User::SIGSEGV);
+				if (current->IsSig())
+					current->PSig((pt_context*)&context->eip);
+				return;
+			}
+			PageRefCount::Set(newPage, 1);
+			PageRefCount::Dec(oldPhys);
+			/* ä½¿ç”¨å€Ÿç”¨å†…æ ¸é¡µè¡¨é¡¹å¤åˆ¶ç‰©ç†é¡µå†…å®¹ */
+			PageTableEntry* kpt = Machine::Instance().GetKernelPageTable().m_Entrys;
+			unsigned long f1 = kpt[258].m_PageBaseAddress;
+			unsigned long f2 = kpt[259].m_PageBaseAddress;
+			kpt[258].m_PageBaseAddress = oldPhys >> 12;
+			kpt[258].m_Present = 1; kpt[258].m_ReadWriter = 0;
+			kpt[259].m_PageBaseAddress = newPage >> 12;
+			kpt[259].m_Present = 1; kpt[259].m_ReadWriter = 1;
+			FlushPageDirectory();
+			const unsigned char* s = (const unsigned char*)(0xC0000000u + 258u * 0x1000u);
+			unsigned char*       d = (unsigned char*)(0xC0000000u + 259u * 0x1000u);
+			for (int i = 0; i < 0x1000; i++) d[i] = s[i];
+			kpt[258].m_PageBaseAddress = f1;
+			kpt[259].m_PageBaseAddress = f2;
+			FlushPageDirectory();
+			md.MapPageDirect(pageVA, newPage >> 12, true);
+		} else {
+			/* å”¯ä¸€æ‰€æœ‰è€…ï¼šç›´æ¥æ”¹ä¸ºå¯å†™ */
+			md.MapPageDirect(pageVA, spte.m_PageBaseAddress, true);
+		}
+		return;
+	}
+
+	/* ä¸åº”åˆ°è¾¾ */
+	Diagnose::Write("PageFault unhandled cr2=%x err=%x\n", cr2, context->error_code);
+	current->PSignal(User::SIGSEGV);
+	if (current->IsSig())
+		current->PSig((pt_context*)&context->eip);
+
+	/* Old code removed â€” replaced by demand-paging handler above.
+	 * Keeping the brace structure intact. */
+	if (false) {
+	/*ï¿½ï¿½È±Ò³ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Õ¹Ò»Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½Ë¶ï¿½ï¿½Å¶ï¿½Õ»Ò³ï¿½æ£¬ï¿½Ç¾Í¶ï¿½Ö´ï¿½Ğ¼ï¿½ï¿½ï¿½È±Ò³ï¿½ì³£ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ©Ò³ï¿½æ²¹ï¿½ï¿½*/
 
 	if( (context->xcs & USER_MODE) == USER_MODE)
 	{
@@ -275,23 +428,24 @@ void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
 	}
 	else
 		Utility::Panic("Page Fault in Kernel Mode.");
+	} /* end if(false) */
 }
 
-//x87 FPU¸¡µã´íÎó(INT 16)
+//x87 FPUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(INT 16)
 IMPLEMENT_EXCEPTION_ENTRANCE(CoprocessorErrorEntrance, CoprocessorError)
 IMPLEMENT_EXCEPTION_HANDLER(CoprocessorError, "Coprocessor Error!", User::SIGFPE)
 
 
-//¶ÔÆëĞ£Ñé(INT 17)  *ÓĞ³ö´íÂë*
+//ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½ï¿½(INT 17)  *ï¿½Ğ³ï¿½ï¿½ï¿½ï¿½ï¿½*
 IMPLEMENT_EXCEPTION_ENTRANCE_ERRCODE(AlignmentCheckEntrance, AlignmentCheck)
 IMPLEMENT_EXCEPTION_HANDLER_ERRCODE(AlignmentCheck, "Alignment Check!", User::SIGBUS)
 
 
-//»úÆ÷¼ì²é(INT 18)
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(INT 18)
 IMPLEMENT_EXCEPTION_ENTRANCE(MachineCheckEntrance, MachineCheck)
 IMPLEMENT_EXCEPTION_HANDLER(MachineCheck, "Machine Check!", User::SIGNUL)
 
 
-//SIMD¸¡µãÒì³£(INT 19)
+//SIMDï¿½ï¿½ï¿½ï¿½ï¿½ì³£(INT 19)
 IMPLEMENT_EXCEPTION_ENTRANCE(SIMDExceptionEntrance, SIMDException)
 IMPLEMENT_EXCEPTION_HANDLER(SIMDException, "SIMD Float Point Exception!", User::SIGFPE)
