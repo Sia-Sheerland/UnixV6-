@@ -215,11 +215,9 @@ void Process::Exit()
 	inodeTable.IPut(u.u_cdir);
 
 	/* �ͷŸý��̶Թ������Ķε����� */
-	if ( u.u_procp->p_textp != NULL )
-	{
-		u.u_procp->p_textp->XFree();
-		u.u_procp->p_textp = NULL;
-	}
+	/* 释放所有逐页分配的用户物理页（data/stack），并释放 VMA 链表 */
+	ProcessManager::FreeUserPages(u);
+	u.u_MemoryDescriptor.FreeAllVmas();
 
 	/* ��u��д�뽻�������ȴ����������ƺ��� */
 	SwapperManager& swapperMgr = Kernel::Instance().GetSwapperManager();
@@ -234,9 +232,11 @@ void Process::Exit()
 	Utility::DWordCopy((int *)&u, (int *)pBuf->b_addr, BufferManager::BUFFER_SIZE / sizeof(int));
 	bufMgr.Bwrite(pBuf);
 
-	/* 释放所有逐页分配的用户物理页（data/stack），并释放 VMA 链表 */
-	ProcessManager::FreeUserPages(u);
-	u.u_MemoryDescriptor.FreeAllVmas();
+	if ( u.u_procp->p_textp != NULL )
+	{
+		u.u_procp->p_textp->XFree();
+		u.u_procp->p_textp = NULL;
+	}
 
 	/* 释放 shadow 页表所占内核内存 */
 	u.u_MemoryDescriptor.Release();
