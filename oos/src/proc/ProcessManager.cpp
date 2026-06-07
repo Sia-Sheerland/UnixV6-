@@ -99,6 +99,14 @@ int ProcessManager::NewProc()
 
 	SaveU(u.u_rsav);
 
+	/* Child detection: when the child process is scheduled and RestoredU
+	 * here, u.u_procp == child (child's ppda is active), while current
+	 * still holds the parent's process pointer from the copied stack.
+	 * Return 1 so Fork() knows we are the child. */
+	if (u.u_procp == child) {
+		return 1;
+	}
+
 	/* -------- 为子进程分配新的 shadow 页表 -------- */
 	PageTable* parentPgTable = u.u_MemoryDescriptor.m_UserPageTableArray;
 	u.u_MemoryDescriptor.Initialize(); /* 在 u（当前=父进程上下文）中临时分配，用于子进程 */

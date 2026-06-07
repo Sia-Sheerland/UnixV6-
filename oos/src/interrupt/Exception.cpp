@@ -387,6 +387,8 @@ void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
 			PageTableEntry* kpt = Machine::Instance().GetKernelPageTable().m_Entrys;
 			unsigned long f1 = kpt[258].m_PageBaseAddress;
 			unsigned long f2 = kpt[259].m_PageBaseAddress;
+			unsigned char rw1 = kpt[258].m_ReadWriter;
+			unsigned char rw2 = kpt[259].m_ReadWriter;
 			kpt[258].m_PageBaseAddress = oldPhys >> 12;
 			kpt[258].m_Present = 1; kpt[258].m_ReadWriter = 0;
 			kpt[259].m_PageBaseAddress = newPage >> 12;
@@ -395,8 +397,8 @@ void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
 			const unsigned char* s = (const unsigned char*)(0xC0000000u + 258u * 0x1000u);
 			unsigned char*       d = (unsigned char*)(0xC0000000u + 259u * 0x1000u);
 			for (int i = 0; i < 0x1000; i++) d[i] = s[i];
-			kpt[258].m_PageBaseAddress = f1;
-			kpt[259].m_PageBaseAddress = f2;
+			kpt[258].m_PageBaseAddress = f1; kpt[258].m_ReadWriter = rw1;
+			kpt[259].m_PageBaseAddress = f2; kpt[259].m_ReadWriter = rw2;
 			FlushPageDirectory();
 			md.MapPageDirect(pageVA, newPage >> 12, true);
 		} else {
