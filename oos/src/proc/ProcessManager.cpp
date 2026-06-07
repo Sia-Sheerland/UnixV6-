@@ -97,6 +97,14 @@ int ProcessManager::NewProc()
 	current->Clone(*child);
 	child->p_size = ProcessManager::USIZE; /* 子进程只拥有 ppda */
 
+	/* 子进程继承父进程共享代码段引用，必须增加引用计数，
+	 * 否则子进程 exec() 调用 XFree() 时会将 x_count/x_ccount 减为 0，
+	 * 导致父进程仍在使用的代码段物理页被释放。 */
+	if (child->p_textp) {
+		child->p_textp->x_count++;
+		child->p_textp->x_ccount++;
+	}
+
 	SaveU(u.u_rsav);
 
 	/* Child detection: when the child process is scheduled and RestoredU
