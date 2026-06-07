@@ -553,7 +553,7 @@ extern "C" void ExecShell();
  * 释放当前进程在页表中已单独分配的所有用户物理页
  * （exec / exit 时调用，用于新的按需分配模型）
  * ================================================================ */
-static void FreeUserPages(User& u)
+void ProcessManager::FreeUserPages(User& u)
 {
     UserPageManager& upm = Kernel::Instance().GetUserPageManager();
     MemoryDescriptor& md = u.u_MemoryDescriptor;
