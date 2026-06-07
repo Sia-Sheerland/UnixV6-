@@ -278,6 +278,10 @@ void Exception::PageFault(struct pt_regs* regs, struct pte_context* context)
 	VmAreaStruct* vma = md.FindVma(cr2);
 
 	if (!vma) {
+		/* runtime() stub is always mapped at virtual 0x0 (physical frame 0);
+		 * no VMA needed — just return and let the hardware mapping handle it. */
+		if (pageVA == 0) return;
+
 		/* 检查是否为栈扩展 */
 		unsigned long stackBase = MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize;
 		if (cr2 < stackBase && cr2 >= stackBase - PageManager::PAGE_SIZE

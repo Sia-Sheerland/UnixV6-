@@ -193,6 +193,11 @@ void MemoryDescriptor::MapToPageTable()
             hwPT[i].m_Entrys[j] = u.u_MemoryDescriptor.m_UserPageTableArray[i].m_Entrys[j];
         }
     }
+    /* runtime() stub was copied to physical frame 0 by main() startup;
+     * always map user virtual 0x0 → physical frame 0 so EIP=0 works. */
+    hwPT[0].m_Entrys[0].m_Present         = 1;
+    hwPT[0].m_Entrys[0].m_ReadWriter      = 1;
+    hwPT[0].m_Entrys[0].m_PageBaseAddress = 0;
     FlushPageDirectory();
 }
 
