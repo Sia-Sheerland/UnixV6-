@@ -153,12 +153,13 @@ void MemoryDescriptor::MapPageDirect(unsigned long va, unsigned long physFrame, 
     spte.m_GlobalPage         = 0;
     spte.m_PageBaseAddress    = physFrame;
 
-    /* 同步更新硬件页表 */
+    /* 同步更新硬件页表并刷新 TLB */
     PageTable* hwPT = Machine::Instance().GetUserPageTableArray();
     unsigned int pageNum  = va >> 12;
     unsigned int tableIdx = pageNum >> 10;
     unsigned int entryIdx = pageNum & 0x3FF;
     hwPT[tableIdx].m_Entrys[entryIdx] = spte;
+    FlushPageDirectory();
 }
 
 void MemoryDescriptor::UnmapPage(unsigned long va)

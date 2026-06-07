@@ -34,6 +34,13 @@ void ProcessManager::Initialize()
 
 void ProcessManager::SetupProcessZero()
 {
+	/* Zero the User struct (ppda page at 0xC03FF000) to handle warm reboots
+	 * where physical RAM retains stale state from the previous session. */
+	{
+		unsigned char* p = (unsigned char*)Kernel::USER_ADDRESS;
+		for (unsigned int i = 0; i < 0x1000; i++) p[i] = 0;
+	}
+
 	//��ʼ��Process#0��Process��User�ṹ
 	Process* pProcZero = &(this->process[0]);
 	pProcZero->p_stat = Process::SRUN;
