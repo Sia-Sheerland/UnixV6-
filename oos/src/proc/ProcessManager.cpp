@@ -34,13 +34,6 @@ void ProcessManager::Initialize()
 
 void ProcessManager::SetupProcessZero()
 {
-	/* Zero the User struct (ppda page at 0xC03FF000) to handle warm reboots
-	 * where physical RAM retains stale state from the previous session. */
-	{
-		unsigned char* p = (unsigned char*)Kernel::USER_ADDRESS;
-		for (unsigned int i = 0; i < 0x1000; i++) p[i] = 0;
-	}
-
 	//��ʼ��Process#0��Process��User�ṹ
 	Process* pProcZero = &(this->process[0]);
 	pProcZero->p_stat = Process::SRUN;
@@ -61,6 +54,12 @@ void ProcessManager::SetupProcessZero()
 	u.u_MemoryDescriptor.m_DataSize = 0;
 	u.u_MemoryDescriptor.m_StackSize = 0;
 	u.u_MemoryDescriptor.m_UserPageTableArray = NULL;
+
+	/* Clear open file table to avoid stale entries after a warm reboot.
+	 * Physical RAM at 0x3FF000 retains previous session state, so
+	 * AllocFreeSlot() would skip fd=0 and return fd=1 → "STDIN Error!". */
+	for (int i = 0; i < OpenFiles::NOFILES; i++)
+		u.u_ofiles.SetF(i, NULL);
 //	u.u_MemoryDescriptor.Initialize();
 }
 
