@@ -173,6 +173,7 @@ int ProcessManager::NewProc()
 	SwtchUStruct(child);
 	{
 		User& cu = Kernel::Instance().GetUser();
+		cu.u_procp                                 = child;
 		cu.u_MemoryDescriptor.m_UserPageTableArray = childPgTable;
 		cu.u_MemoryDescriptor.m_VmaList            = childVmaList;
 		cu.u_MemoryDescriptor.m_TextStartAddress   = u.u_MemoryDescriptor.m_TextStartAddress;
