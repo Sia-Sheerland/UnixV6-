@@ -130,9 +130,9 @@ public:
 	PEParser(unsigned long peAddress);
 	unsigned long Parse();
 	/*
-	 *@comment ½«ParseºóµÄexe¶¨Î»µ½ÄÚ´æÖĞÕıÈ·µÄÎ»ÖÃ
-	 *@Important ÔÚRelocateÖ®Ç°ĞèÒªÊ×ÏÈµ÷ÓÃParse()ÒÔµÃµ½ËùĞèÒªµÄ
-	 * exe¸÷¸ösectionµÄĞÅÏ¢£¬Í¬Ê±ĞèÒªÊ×ÏÈmapºÃÒ³±í£¬·ñÔò»áÊ§°Ü
+	 *@comment ï¿½ï¿½Parseï¿½ï¿½ï¿½exeï¿½ï¿½Î»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Î»ï¿½ï¿½
+	 *@Important ï¿½ï¿½RelocateÖ®Ç°ï¿½ï¿½Òªï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½Parse()ï¿½ÔµÃµï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½
+	 * exeï¿½ï¿½ï¿½ï¿½sectionï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Í¬Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½mapï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½
 	 */
 	unsigned int Relocate();
 	unsigned int Relocate(Inode* p_inode, int sharedText);
@@ -144,12 +144,20 @@ public:
 
 	unsigned long TextAddress;
 	unsigned long TextSize;
-	
+
 	unsigned long DataAddress;
 	unsigned long DataSize;
 
 	unsigned long StackSize;
 	unsigned long HeapSize;
+
+	/* å„èŠ‚åœ¨æ–‡ä»¶ä¸­çš„åŸå§‹åç§»å’Œè™šæ‹Ÿå¤§å°ï¼Œä¾›ç¼ºé¡µå¤„ç†ç¨‹åºæŒ‰éœ€åŠ è½½ä½¿ç”¨ */
+	static const unsigned int MAX_SECTIONS = 8;
+	unsigned long SectionFileOffset[MAX_SECTIONS];   /* PointerToRawData */
+	unsigned long SectionVirtAddr[MAX_SECTIONS];     /* VirtualAddress + ImageBase */
+	unsigned long SectionVirtSize[MAX_SECTIONS];     /* VirtualSizeï¼ˆå†…å­˜ä¸­å¤§å°ï¼‰ */
+	unsigned long SectionRawSize[MAX_SECTIONS];      /* SizeOfRawDataï¼ˆæ–‡ä»¶ä¸­å¤§å°ï¼‰ */
+	unsigned int  NumSections;                       /* å®é™…èŠ‚æ•° */
 
 private:
 	unsigned long peAddress;

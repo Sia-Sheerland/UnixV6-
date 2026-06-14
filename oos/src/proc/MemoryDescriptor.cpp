@@ -4,201 +4,328 @@
 #include "Machine.h"
 #include "PageDirectory.h"
 #include "Video.h"
+#include "OpenFileManager.h"
+
+/* ================================================================
+ * ç”Ÿå‘½å‘¨æœŸ
+ * ================================================================ */
+
+MemoryDescriptor::MemoryDescriptor()
+    : m_UserPageTableArray(0),
+      m_TextStartAddress(0), m_TextSize(0),
+      m_DataStartAddress(0), m_DataSize(0),
+      m_StackSize(0),
+      m_HeapStart(0), m_HeapEnd(0),
+      m_VmaList(0)
+{
+}
+
+MemoryDescriptor::~MemoryDescriptor()
+{
+}
 
 void MemoryDescriptor::Initialize()
 {
-	KernelPageManager& kernelPageManager = Kernel::Instance().GetKernelPageManager();
-	
-	/* m_UserPageTableArrayĞèÒª°ÑAllocMemory()·µ»ØµÄÎïÀíÄÚ´æµØÖ· + 0xC0000000 */
-	this->m_UserPageTableArray = (PageTable*)(kernelPageManager.AllocMemory(sizeof(PageTable) * USER_SPACE_PAGE_TABLE_CNT) + Machine::KERNEL_SPACE_START_ADDRESS);
+    KernelPageManager& kpm = Kernel::Instance().GetKernelPageManager();
+    this->m_UserPageTableArray = (PageTable*)(
+        kpm.AllocMemory(sizeof(PageTable) * USER_SPACE_PAGE_TABLE_CNT)
+        + Machine::KERNEL_SPACE_START_ADDRESS);
 }
 
 void MemoryDescriptor::Release()
 {
-	KernelPageManager& kernelPageManager = Kernel::Instance().GetKernelPageManager();
-	if ( this->m_UserPageTableArray )
-	{
-		kernelPageManager.FreeMemory(sizeof(PageTable) * USER_SPACE_PAGE_TABLE_CNT, (unsigned long)this->m_UserPageTableArray - Machine::KERNEL_SPACE_START_ADDRESS);
-		this->m_UserPageTableArray = NULL;
-	}
+    KernelPageManager& kpm = Kernel::Instance().GetKernelPageManager();
+    if (this->m_UserPageTableArray) {
+        kpm.FreeMemory(sizeof(PageTable) * USER_SPACE_PAGE_TABLE_CNT,
+                       (unsigned long)this->m_UserPageTableArray
+                       - Machine::KERNEL_SPACE_START_ADDRESS);
+        this->m_UserPageTableArray = 0;
+    }
 }
 
-unsigned int MemoryDescriptor::MapEntry(unsigned long virtualAddress, unsigned int size, unsigned long phyPageIdx, bool isReadWrite)
-{	
-	unsigned long address = virtualAddress - USER_SPACE_START_ADDRESS;
-	
-	//¼ÆËã´ÓpagetableµÄÄÄÒ»¸öµØÖ·¿ªÊ¼Ó³Éä
-	unsigned long startIdx = address >> 12;
-	unsigned long cnt = ( size + (PageManager::PAGE_SIZE - 1) )/ PageManager::PAGE_SIZE;
+/* ================================================================
+ * VMA ç®¡ç†
+ * ================================================================ */
 
-	PageTableEntry* entrys = (PageTableEntry*)this->m_UserPageTableArray;
-	for ( unsigned int i = startIdx; i < startIdx + cnt; i++, phyPageIdx++ )
-	{
-		entrys[i].m_Present = 0x1;
-		entrys[i].m_ReadWriter = isReadWrite;
-		entrys[i].m_PageBaseAddress = phyPageIdx;
-	}
-	return phyPageIdx;
-}
-
-void MemoryDescriptor::MapTextEntrys(unsigned long textStartAddress, unsigned long textSize, unsigned long textPageIdx)
+VmAreaStruct* MemoryDescriptor::AddVma(unsigned long start, unsigned long end,
+                                       unsigned char prot, unsigned int flags,
+                                       Inode* inode,
+                                       unsigned long f_start, unsigned long f_len)
 {
-	this->MapEntry(textStartAddress, textSize, textPageIdx, false);
-}
-void MemoryDescriptor::MapDataEntrys(unsigned long dataStartAddress, unsigned long dataSize, unsigned long dataPageIdx)
-{
-	this->MapEntry(dataStartAddress, dataSize, dataPageIdx, true);
-}
+    VmAreaStruct* vma = VmaAlloc();
+    if (!vma) return 0;
 
-void MemoryDescriptor::MapStackEntrys(unsigned long stackSize, unsigned long stackPageIdx)
-{
-	unsigned long stackStartAddress = (USER_SPACE_START_ADDRESS + USER_SPACE_SIZE - stackSize) & 0xFFFFF000;
-	this->MapEntry(stackStartAddress, stackSize, stackPageIdx, true);
-}
+    vma->vm_start = start;
+    vma->vm_end   = end;
+    vma->vm_prot  = prot;
+    vma->vm_flags = flags;
+    vma->vm_inode = inode;
+    vma->f_start  = f_start;
+    vma->f_len    = f_len;
 
-PageTable* MemoryDescriptor::GetUserPageTableArray()
-{
-	return this->m_UserPageTableArray;
-}
-unsigned long MemoryDescriptor::GetTextStartAddress()
-{
-	return this->m_TextStartAddress;
-}
-unsigned long MemoryDescriptor::GetTextSize()
-{
-	return this->m_TextSize;
-}
-unsigned long MemoryDescriptor::GetDataStartAddress()
-{
-	return this->m_DataStartAddress;
-}
-unsigned long MemoryDescriptor::GetDataSize()
-{
-	return this->m_DataSize;
-}
-unsigned long MemoryDescriptor::GetStackSize()
-{
-	return this->m_StackSize;
+    /* æ’å…¥é“¾è¡¨å¤´éƒ¨ */
+    vma->next    = this->m_VmaList;
+    this->m_VmaList = vma;
+    return vma;
 }
 
-bool MemoryDescriptor::EstablishUserPageTable( unsigned long textVirtualAddress, unsigned long textSize, unsigned long dataVirtualAddress, unsigned long dataSize, unsigned long stackSize )
+VmAreaStruct* MemoryDescriptor::FindVma(unsigned long va)
 {
-	User& u = Kernel::Instance().GetUser();
-
-	/* Èç¹û³¬³öÔÊĞíµÄÓÃ»§³ÌĞò×î´ó8MµÄµØÖ·¿Õ¼äÏŞÖÆ */
-	if ( textSize + dataSize + stackSize  + PageManager::PAGE_SIZE > USER_SPACE_SIZE - textVirtualAddress)
-	{
-		u.u_error = User::ENOMEM;
-		Diagnose::Write("u.u_error = %d\n",u.u_error);
-		return false;
-	}
-
-	this->ClearUserPageTable();
-
-	/* ÒÔÒ³¿òÆ«ÒÆÁ¿phyPageIndex == 0£¬ÎªÕıÎÄ¶Î½¨Á¢Ïà¶ÔµØÖ·Ó³ÕÕ±í */
-	unsigned int phyPageIndex = 0;
-	phyPageIndex = this->MapEntry(textVirtualAddress, textSize, phyPageIndex, false);
-
-	/* ÒÔÏà¶ÔÆğÊ¼µØÖ·phyPageIndexÎª1£¬ppdaÇøÕ¼ÓÃ1Ò³4K´óĞ¡ÎïÀíÄÚ´æ£¬ÎªÊı¾İ¶Î½¨Á¢Ïà¶ÔµØÖ·Ó³ÕÕ±í */
-	phyPageIndex = 1;
-	phyPageIndex = this->MapEntry(dataVirtualAddress, dataSize, phyPageIndex, true);
-
-	/* ½ô¸ú×ÅÊı¾İ¶ÎÖ®ºó£¬Îª¶ÑÕ»¶Î½¨Á¢Ïà¶ÔµØÖ·Ó³ÕÕ±í */
-	unsigned long stackStartAddress = (USER_SPACE_START_ADDRESS + USER_SPACE_SIZE - stackSize) & 0xFFFFF000;
-	this->MapEntry(stackStartAddress, stackSize, phyPageIndex, true);
-
-	/* ½«Ïà¶ÔµØÖ·Ó³ÕÕ±í¸ù¾İÕıÎÄ¶ÎºÍÊı¾İ¶ÎÔÚÄÚ´æÖĞµÄÆğÊ¼µØÖ·pText->x_caddr¡¢p_addr£¬½¨Á¢ÓÃ»§Ì¬ÄÚ´æÇøµÄÒ³±íÓ³Éä */
-	this->MapToPageTable();
-	return true;
+    for (VmAreaStruct* v = this->m_VmaList; v; v = v->next) {
+        if (va >= v->vm_start && va < v->vm_end)
+            return v;
+    }
+    return 0;
 }
 
-void MemoryDescriptor::ClearUserPageTable()
+void MemoryDescriptor::FreeAllVmas()
 {
-	User& u = Kernel::Instance().GetUser();
-	PageTable* pUserPageTable = u.u_MemoryDescriptor.m_UserPageTableArray;
+    InodeTable* inodeTbl = Kernel::Instance().GetFileManager().m_InodeTable;
+    VmAreaStruct* v = this->m_VmaList;
+    while (v) {
+        VmAreaStruct* next = v->next;
+        /* è‹¥ VMA æŒæœ‰ inode å¼•ç”¨ï¼Œé‡Šæ”¾ä¹‹ */
+        if (v->vm_inode) {
+            inodeTbl->IPut(v->vm_inode);
+            v->vm_inode = 0;
+        }
+        VmaFree(v);
+        v = next;
+    }
+    this->m_VmaList = 0;
+}
 
-	unsigned int i ;
-	unsigned int j ;
+VmAreaStruct* MemoryDescriptor::CloneVmaList()
+{
+    VmAreaStruct* newHead = 0;
+    VmAreaStruct* newTail = 0;
 
-	for (i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
-	{
-		for (j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++ )
-		{
-			pUserPageTable[i].m_Entrys[j].m_Present = 0;
-			pUserPageTable[i].m_Entrys[j].m_ReadWriter = 0;
-			pUserPageTable[i].m_Entrys[j].m_UserSupervisor = 1;
-			pUserPageTable[i].m_Entrys[j].m_PageBaseAddress = 0;
-		}
-	}
+    for (VmAreaStruct* src = this->m_VmaList; src; src = src->next) {
+        VmAreaStruct* dst = VmaAlloc();
+        if (!dst) break;
 
+        dst->vm_start = src->vm_start;
+        dst->vm_end   = src->vm_end;
+        dst->vm_prot  = src->vm_prot;
+        dst->f_start  = src->f_start;
+        dst->f_len    = src->f_len;
+        dst->vm_flags = src->vm_flags;
+        dst->vm_inode = src->vm_inode;
+        dst->next     = 0;
+
+        /* è‹¥æŒæœ‰ inodeï¼Œå¢åŠ å¼•ç”¨è®¡æ•° */
+        if (dst->vm_inode)
+            dst->vm_inode->i_count++;
+
+        if (!newHead) {
+            newHead = newTail = dst;
+        } else {
+            newTail->next = dst;
+            newTail = dst;
+        }
+    }
+    return newHead;
+}
+
+/* ================================================================
+ * å•é¡µæ“ä½œ
+ * ================================================================ */
+
+PageTableEntry& MemoryDescriptor::GetPTE(unsigned long va)
+{
+    unsigned int pageNum  = va >> 12;
+    unsigned int tableIdx = pageNum >> 10;   /* 0 æˆ– 1 */
+    unsigned int entryIdx = pageNum & 0x3FF; /* 0 ~ 1023 */
+    return this->m_UserPageTableArray[tableIdx].m_Entrys[entryIdx];
+}
+
+void MemoryDescriptor::MapPageDirect(unsigned long va, unsigned long physFrame, bool writable)
+{
+    /* æ›´æ–° shadow é¡µè¡¨ */
+    PageTableEntry& spte = GetPTE(va);
+    spte.m_Present            = 1;
+    spte.m_ReadWriter         = writable ? 1 : 0;
+    spte.m_UserSupervisor     = 1;
+    spte.m_WriteThrough       = 0;
+    spte.m_CacheDisabled      = 0;
+    spte.m_Accessed           = 0;
+    spte.m_Dirty              = 0;
+    spte.m_GlobalPage         = 0;
+    spte.m_PageBaseAddress    = physFrame;
+
+    /* åŒæ­¥æ›´æ–°ç¡¬ä»¶é¡µè¡¨å¹¶åˆ·æ–° TLB */
+    PageTable* hwPT = Machine::Instance().GetUserPageTableArray();
+    unsigned int pageNum  = va >> 12;
+    unsigned int tableIdx = pageNum >> 10;
+    unsigned int entryIdx = pageNum & 0x3FF;
+    hwPT[tableIdx].m_Entrys[entryIdx] = spte;
+    FlushPageDirectory();
+}
+
+void MemoryDescriptor::UnmapPage(unsigned long va)
+{
+    /* shadow */
+    PageTableEntry& spte = GetPTE(va);
+    spte.m_Present        = 0;
+    spte.m_ReadWriter     = 0;
+    spte.m_PageBaseAddress= 0;
+
+    /* ç¡¬ä»¶ */
+    PageTable* hwPT = Machine::Instance().GetUserPageTableArray();
+    unsigned int pageNum  = va >> 12;
+    unsigned int tableIdx = pageNum >> 10;
+    unsigned int entryIdx = pageNum & 0x3FF;
+    hwPT[tableIdx].m_Entrys[entryIdx] = spte;
+    FlushPageDirectory();
+}
+
+/* ================================================================
+ * MapToPageTable â€” å°† shadow é¡µè¡¨ç›´æ¥å¤åˆ¶åˆ°ç¡¬ä»¶é¡µè¡¨
+ * ï¼ˆå–ä»£åŸå…ˆä½¿ç”¨ç›¸å¯¹åç§»çš„ç‰ˆæœ¬ï¼‰
+ * ================================================================ */
+void MemoryDescriptor::MapToPageTable()
+{
+    User& u = Kernel::Instance().GetUser();
+    if (!u.u_MemoryDescriptor.m_UserPageTableArray) return;
+
+    PageTable* hwPT = Machine::Instance().GetUserPageTableArray();
+    for (unsigned int i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++) {
+        for (unsigned int j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++) {
+            hwPT[i].m_Entrys[j] = u.u_MemoryDescriptor.m_UserPageTableArray[i].m_Entrys[j];
+        }
+    }
+    /* runtime() stub was copied to physical frame 0 by main() startup;
+     * always map user virtual 0x0 â†’ physical frame 0 so EIP=0 works. */
+    hwPT[0].m_Entrys[0].m_Present         = 1;
+    hwPT[0].m_Entrys[0].m_ReadWriter      = 1;
+    hwPT[0].m_Entrys[0].m_PageBaseAddress = 0;
+    FlushPageDirectory();
 }
 
 void MemoryDescriptor::DisplayPageTable()
 {
-	unsigned int i,j;
-
-	Diagnose::Write("Process PT:");
-	for (i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
-		for ( j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++)
-			if ( 1 == this->m_UserPageTableArray[i].m_Entrys[j].m_Present )
-				Diagnose::Write("<%d,%x>  ",i*1024+j,this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress);
-	Diagnose::Write("\n");
-
-	Diagnose::Write("<PPDA,%x>  ",Machine::Instance().GetKernelPageTable().m_Entrys[1023].m_PageBaseAddress);
-
-	PageTable* pUserPageTable = Machine::Instance().GetUserPageTableArray();
-	Diagnose::Write("System PT:");
-	for (i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
-		for ( j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++)
-			if ( 1 == pUserPageTable[i].m_Entrys[j].m_Present )
-				Diagnose::Write("<%d,%x>  ",i*1024+j,pUserPageTable[i].m_Entrys[j].m_PageBaseAddress);
-	Diagnose::Write("\n");
+    unsigned int i, j;
+    Diagnose::Write("Process PT:");
+    for (i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
+        for (j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++)
+            if (this->m_UserPageTableArray[i].m_Entrys[j].m_Present)
+                Diagnose::Write("<%d,%x>  ", i * 1024 + j,
+                    this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress);
+    Diagnose::Write("\n");
 }
 
-void MemoryDescriptor::MapToPageTable()
+/* ================================================================
+ * ClearUserPageTable
+ * ================================================================ */
+void MemoryDescriptor::ClearUserPageTable()
 {
-	User& u = Kernel::Instance().GetUser();
+    User& u = Kernel::Instance().GetUser();
+    PageTable* pt = u.u_MemoryDescriptor.m_UserPageTableArray;
+    if (!pt) return;
 
-	if(u.u_MemoryDescriptor.m_UserPageTableArray == NULL)
-		return;
-
-	PageTable* pUserPageTable = Machine::Instance().GetUserPageTableArray();
-	unsigned int textPF = 0;
-	if ( u.u_procp->p_textp != NULL )
-	{
-		textPF = u.u_procp->p_textp->x_caddr >> 12;
-	}
-
-	unsigned int pAddrPF = u.u_procp->p_addr >> 12;
-
-	for (unsigned int i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++)
-	{
-		for ( unsigned int j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++ )
-		{
-			pUserPageTable[i].m_Entrys[j].m_Present = 0;   // Çå0±íÊ¾¸ÃÂß¼­Ò³²»´æÔÚ
-
-			if ( 1 == this->m_UserPageTableArray[i].m_Entrys[j].m_Present )
-			{
-				if ( 0 == this->m_UserPageTableArray[i].m_Entrys[j].m_ReadWriter )      // ROÂß¼­Ò³
-				{
-					pUserPageTable[i].m_Entrys[j].m_Present = 1;
-					pUserPageTable[i].m_Entrys[j].m_ReadWriter = 0;
-					pUserPageTable[i].m_Entrys[j].m_PageBaseAddress = this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress + textPF;
-				}
-				else if ( 1 == this->m_UserPageTableArray[i].m_Entrys[j].m_ReadWriter )    // RWÂß¼­Ò³
-				{
-					pUserPageTable[i].m_Entrys[j].m_Present = 1;
-					pUserPageTable[i].m_Entrys[j].m_ReadWriter = 1;
-					pUserPageTable[i].m_Entrys[j].m_PageBaseAddress = this->m_UserPageTableArray[i].m_Entrys[j].m_PageBaseAddress + pAddrPF;
-				}
-			}
-		}
-	}
-
-	pUserPageTable[0].m_Entrys[0].m_Present = 1;
-	pUserPageTable[0].m_Entrys[0].m_ReadWriter = 1;
-	pUserPageTable[0].m_Entrys[0].m_PageBaseAddress = 0;
-
-	FlushPageDirectory();
+    for (unsigned int i = 0; i < Machine::USER_PAGE_TABLE_CNT; i++) {
+        for (unsigned int j = 0; j < PageTable::ENTRY_CNT_PER_PAGETABLE; j++) {
+            pt[i].m_Entrys[j].m_Present          = 0;
+            pt[i].m_Entrys[j].m_ReadWriter        = 0;
+            pt[i].m_Entrys[j].m_UserSupervisor    = 1;
+            pt[i].m_Entrys[j].m_PageBaseAddress   = 0;
+        }
+    }
 }
 
+/* ================================================================
+ * EstablishUserPageTable
+ *
+ * æ–°è¯­ä¹‰ï¼š
+ *   - æ¸…ç©º shadow é¡µè¡¨ï¼ˆæ‰€æœ‰ P=0ï¼‰
+ *   - æ›´æ–°æ®µä¿¡æ¯å­—æ®µ
+ *   - å°†ä»£ç æ®µé¡µæ˜ å°„åˆ°å…±äº« x_caddrï¼ˆåªè¯»ï¼‰
+ *   - æ•°æ®/BSS/æ ˆ/å †ç•™ä½œæŒ‰éœ€è°ƒé¡µï¼ŒVMA ç”± exec/SStack/SBreak è´Ÿè´£æ·»åŠ 
+ *   - è°ƒç”¨ MapToPageTable() åŒæ­¥åˆ°ç¡¬ä»¶
+ * ================================================================ */
+bool MemoryDescriptor::EstablishUserPageTable(unsigned long textVA,  unsigned long textSize,
+                                               unsigned long dataVA,  unsigned long dataSize,
+                                               unsigned long stackSize)
+{
+    User& u = Kernel::Instance().GetUser();
+
+    if (textSize + dataSize + stackSize + PageManager::PAGE_SIZE
+        > USER_SPACE_SIZE - textVA) {
+        u.u_error = User::ENOMEM;
+        return false;
+    }
+
+    /* æ›´æ–°æ®µæè¿°ä¿¡æ¯ */
+    this->m_TextStartAddress = textVA;
+    this->m_TextSize         = textSize;
+    this->m_DataStartAddress = dataVA;
+    this->m_DataSize         = dataSize;
+    this->m_StackSize        = stackSize;
+
+    /* æ¸…ç©ºæ‰€æœ‰é¡µè¡¨é¡¹ */
+    this->ClearUserPageTable();
+
+    /* æ˜ å°„ä»£ç æ®µï¼ˆåªè¯»ï¼Œç»å¯¹å¸§å· = x_caddr ä¸­çš„å¸§ï¼‰ */
+    if (u.u_procp->p_textp && textSize > 0) {
+        unsigned long textPhysBase = u.u_procp->p_textp->x_caddr;
+        unsigned long pages = (textSize + PageManager::PAGE_SIZE - 1)
+                              / PageManager::PAGE_SIZE;
+        for (unsigned long p = 0; p < pages; p++) {
+            unsigned long va  = textVA + p * PageManager::PAGE_SIZE;
+            unsigned long frm = (textPhysBase + p * PageManager::PAGE_SIZE)
+                                >> 12;
+            MapPageDirect(va, frm, false /* R/O */);
+        }
+    }
+
+    /* æ•°æ®/æ ˆ/å †é¡µï¼šå…¨éƒ¨ P=0ï¼Œç­‰å¾…ç¼ºé¡µæ—¶æŒ‰éœ€åˆ†é… */
+
+    /* åŒæ­¥åˆ°ç¡¬ä»¶ */
+    MapToPageTable();
+    return true;
+}
+
+/* ================================================================
+ * æ—§æ¥å£å…¼å®¹å®ç°ï¼ˆMapTextEntrys / MapDataEntrys / MapStackEntrysï¼‰
+ * ç°åœ¨ç›´æ¥æ“ä½œ shadow é¡µè¡¨çš„ç»å¯¹å¸§å·ï¼Œä¸å†ç”¨ç›¸å¯¹åç§»ã€‚
+ * ================================================================ */
+
+unsigned int MemoryDescriptor::MapEntry(unsigned long va, unsigned int size,
+                                        unsigned long phyPageIdx, bool isReadWrite)
+{
+    unsigned long startIdx = va >> 12;
+    unsigned long cnt = (size + PageManager::PAGE_SIZE - 1) / PageManager::PAGE_SIZE;
+    PageTableEntry* entrys = (PageTableEntry*)this->m_UserPageTableArray;
+    for (unsigned long i = startIdx; i < startIdx + cnt; i++, phyPageIdx++) {
+        entrys[i].m_Present          = 1;
+        entrys[i].m_ReadWriter       = isReadWrite ? 1 : 0;
+        entrys[i].m_UserSupervisor   = 1;
+        entrys[i].m_PageBaseAddress  = phyPageIdx;
+    }
+    return phyPageIdx;
+}
+
+void MemoryDescriptor::MapTextEntrys(unsigned long addr, unsigned long size, unsigned long idx)
+{
+    MapEntry(addr, size, idx, false);
+}
+void MemoryDescriptor::MapDataEntrys(unsigned long addr, unsigned long size, unsigned long idx)
+{
+    MapEntry(addr, size, idx, true);
+}
+void MemoryDescriptor::MapStackEntrys(unsigned long stackSize, unsigned long idx)
+{
+    unsigned long stackStart = (USER_SPACE_START_ADDRESS + USER_SPACE_SIZE - stackSize)
+                               & 0xFFFFF000;
+    MapEntry(stackStart, stackSize, idx, true);
+}
+
+/* ================================================================
+ * Getters
+ * ================================================================ */
+PageTable*    MemoryDescriptor::GetUserPageTableArray()  { return m_UserPageTableArray; }
+unsigned long MemoryDescriptor::GetTextStartAddress()    { return m_TextStartAddress; }
+unsigned long MemoryDescriptor::GetTextSize()            { return m_TextSize; }
+unsigned long MemoryDescriptor::GetDataStartAddress()    { return m_DataStartAddress; }
+unsigned long MemoryDescriptor::GetDataSize()            { return m_DataSize; }
+unsigned long MemoryDescriptor::GetStackSize()           { return m_StackSize; }

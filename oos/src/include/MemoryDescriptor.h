@@ -2,73 +2,157 @@
 #define MEMORY_DESCRIPTOR_H
 
 #include "PageTable.h"
+#include "VmAreaStruct.h"
 
+/*
+ * MemoryDescriptor â€” è¿›ç¨‹è™šæ‹Ÿåœ°å€ç©ºé—´æè¿°ç¬¦
+ *
+ * åœ¨åŸ Unix V6++ åŸºç¡€ä¸Šæ‰©å±•ï¼š
+ *   1. å¢åŠ  vm_area_struct é“¾è¡¨ï¼Œæè¿°å„è™šæ‹Ÿå†…å­˜åŒºåŸŸï¼›
+ *   2. å¢åŠ å †çš„èµ·æ­¢åœ°å€ï¼ˆæ”¯æŒ brk/sbrkï¼‰ï¼›
+ *   3. é¡µè¡¨é¡¹æ”¹ä¸ºå­˜å‚¨ç»å¯¹ç‰©ç†å¸§å·ï¼ŒMapToPageTable() ç›´æ¥å¤åˆ¶ï¼›
+ *   4. æ–°å¢ per-page æ“ä½œè¾…åŠ©å‡½æ•°ï¼Œä¾›ç¼ºé¡µå¤„ç†ç¨‹åºä½¿ç”¨ã€‚
+ */
 class MemoryDescriptor
 {
 public:
-	/* ÓÃ»§¿Õ¼ä´óĞ¡ 8M 0x0 - 0x800000 2 PageTable */
-	static const unsigned int USER_SPACE_SIZE	= 0x800000; 
-	static const unsigned int USER_SPACE_PAGE_TABLE_CNT = 0x2;
-	static const unsigned long USER_SPACE_START_ADDRESS		= 0x0;
-
-
+    /* ç”¨æˆ·ç©ºé—´å¤§å° 8Mï¼Œä½¿ç”¨ 2 ä¸ªé¡µè¡¨ */
+    static const unsigned int USER_SPACE_SIZE              = 0x800000;
+    static const unsigned int USER_SPACE_PAGE_TABLE_CNT   = 0x2;
+    static const unsigned long USER_SPACE_START_ADDRESS   = 0x0;
 
 public:
-	MemoryDescriptor();
-	~MemoryDescriptor();
+    MemoryDescriptor();
+    ~MemoryDescriptor();
 
 public:
-	/* ÉêÇë²¢³õÊ¼»¯PageDirectory£¬ÔÚ×öMap²Ù×÷Ç°Ê¹ÓÃ */
-	void Initialize();
-	/* ÔÚÊÍ·Å½ø³ÌÊ±£¬ĞèÒªµ÷ÓÃ¸Ã²Ù×÷ÊÍ·Å±»Õ¼ÓÃµÄÒ³±í */
-	void Release();
+    /* -------- ç”Ÿå‘½å‘¨æœŸ -------- */
 
-	/* ÒÔÏÂº¯ÊıÓÃ»§Íê³É¶Ôuser½á¹¹ÖĞÒ³±íEntryµÄÌî³ä£¬¸ÃÒ³±íÔÚ½ø³ÌÇĞ»»Ê±Ìî³äÏÖÓĞµÄÒ³±í */
-	void MapTextEntrys(unsigned long textStartAddress, unsigned long textSize, unsigned long textPageIdxInPhyMemory);
-	void MapDataEntrys(unsigned long dataStartAddress, unsigned long dataSize, unsigned long dataPageIdxInPhyMemory);
-	void MapStackEntrys(unsigned long stackSize, unsigned long stackPageIdxInPhyMemory);
+    /* åˆ†é…å¹¶åˆå§‹åŒ– m_UserPageTableArrayï¼ŒæŒ‚å…¥é¡µç›®å½•å‰è°ƒç”¨ */
+    void Initialize();
 
-	/* @comment Ô­unixv6ÖĞsureg()º¯Êı.Ô­º¯ÊıÓÃÓÚ½«½ø³ÌuÇøÖĞµÄuisaºÍuisdÁ½Êı×éÖĞµÄÄÚ´æÒ³Ó³ÉäÊı¾İÓ³Éäµ½UISAÓëUISD
-	 * ¼Ä´æÆ÷ÖĞ.ÓÉÓÚÌåÏµ½á¹¹µÄ¹ØÏµ£¬Ê¹ÓÃMapToPageTable()º¯Êı½«MemoryDescriptorÖĞµÄÒ³±ícopyµ½²Ù×÷ÏµÍ³ÕıÊ¹ÓÃµÄ
-	 * PageTableÖĞ£¬È»ºóÊ¹ÓÃFlushPageDirectory()º¯ÊıÍê³ÉÒ³±íÓ³Éä£¬ĞÂÉÏÌ¨½ø³ÌµÄÓÃ»§ÇøÊı¾İÓ³ÉäÍê³É */
-	void MapToPageTable();
-	void DisplayPageTable();
+    /* é‡Šæ”¾è¿›ç¨‹é¡µè¡¨æ‰€å å†…æ ¸å†…å­˜ï¼ˆExit æ—¶è°ƒç”¨ï¼‰ */
+    void Release();
 
-	/* 
-	 * @comment Ô­unix v6ÖĞestabur()º¯Êı£¬ÓÃÓÚ½¨Á¢ÓÃ»§Ì¬µØÖ·¿Õ¼äµÄÏà¶ÔµØÖ·Ó³Éä±í£¬È»ºóµ÷ÓÃ
-	 * MapToPageTable()º¯Êı½«Ïà¶ÔµØÖ·Ó³Éä±í¼ÓÔØµ½ÓÃ»§Ì¬Ò³±íÖĞ¡£
-	 */
-	bool EstablishUserPageTable(unsigned long textVirtualAddress, unsigned long textSize, unsigned long dataVirtualAddress, unsigned long dataSize, unsigned long stackSize);
-	void ClearUserPageTable();
-	PageTable* GetUserPageTableArray();
-	unsigned long GetTextStartAddress();
-	unsigned long GetTextSize();
-	unsigned long GetDataStartAddress();
-	unsigned long GetDataSize();
-	unsigned long GetStackSize();
+    /* -------- VMA ç®¡ç† -------- */
+
+    /**
+     * å‘é“¾è¡¨å¤´éƒ¨æ’å…¥ä¸€ä¸ªæ–° VMAã€‚
+     * @param start    è™šæ‹Ÿèµ·å§‹åœ°å€
+     * @param end      è™šæ‹Ÿç»“æŸåœ°å€ï¼ˆä¸å«ï¼‰
+     * @param prot     ä¿æŠ¤ä½ï¼ˆVM_PROT_*ï¼‰
+     * @param flags    åŒºåŸŸç±»å‹ï¼ˆVM_TEXT / DATA / BSS / HEAP / STACKï¼‰
+     * @param inode    æ–‡ä»¶æ”¯æ’‘ inodeï¼ˆåŒ¿åä¸º NULLï¼‰
+     * @param f_start  æ–‡ä»¶å†…èµ·å§‹åç§»ï¼ˆå­—èŠ‚ï¼‰
+     * @param f_len    éœ€ä»æ–‡ä»¶è¯»å–çš„å­—èŠ‚æ•°
+     * @return æ–°åˆ†é…çš„ VmAreaStruct æŒ‡é’ˆï¼Œå¤±è´¥è¿”å› NULL
+     */
+    VmAreaStruct* AddVma(unsigned long start, unsigned long end,
+                         unsigned char prot, unsigned int flags,
+                         Inode* inode, unsigned long f_start, unsigned long f_len);
+
+    /**
+     * åœ¨ VMA é“¾è¡¨ä¸­æŸ¥æ‰¾åŒ…å«è™šæ‹Ÿåœ°å€ va çš„åŒºåŸŸã€‚
+     * @return æ‰¾åˆ°çš„ VmAreaStructï¼Œæ‰¾ä¸åˆ°è¿”å› NULL
+     */
+    VmAreaStruct* FindVma(unsigned long va);
+
+    /**
+     * é‡Šæ”¾ VMA é“¾è¡¨ä¸­çš„æ‰€æœ‰èŠ‚ç‚¹ï¼›è‹¥èŠ‚ç‚¹æŒæœ‰ inode å¼•ç”¨åˆ™è°ƒç”¨ IPutã€‚
+     */
+    void FreeAllVmas();
+
+    /**
+     * æ·±æ‹·è´ VMA é“¾è¡¨ï¼ˆç”¨äº forkï¼‰ï¼›åŒæ—¶ä¸ºæ¯ä¸ªæŒæœ‰ inode çš„ VMA å¢åŠ å¼•ç”¨è®¡æ•°ã€‚
+     */
+    VmAreaStruct* CloneVmaList();
+
+    /* -------- å•é¡µæ“ä½œ -------- */
+
+    /**
+     * è·å–è™šæ‹Ÿåœ°å€ va å¯¹åº”çš„é¡µè¡¨é¡¹å¼•ç”¨ï¼ˆshadow é¡µè¡¨ï¼‰ã€‚
+     */
+    PageTableEntry& GetPTE(unsigned long va);
+
+    /**
+     * åœ¨ shadow é¡µè¡¨å’Œç¡¬ä»¶é¡µè¡¨ä¸­åŒæ—¶æ˜ å°„ä¸€ä¸ªé¡µã€‚
+     * @param va        è™šæ‹Ÿåœ°å€ï¼ˆæŒ‰é¡µå¯¹é½ï¼‰
+     * @param physFrame ç»å¯¹ç‰©ç†å¸§å·ï¼ˆphysAddr >> 12ï¼‰
+     * @param writable  true = R/Wï¼Œfalse = R/O
+     */
+    void MapPageDirect(unsigned long va, unsigned long physFrame, bool writable);
+
+    /**
+     * å–æ¶ˆ va å¯¹åº”çš„æ˜ å°„ï¼ˆshadow + ç¡¬ä»¶ï¼‰ã€‚
+     */
+    void UnmapPage(unsigned long va);
+
+    /**
+     * å°† shadow é¡µè¡¨ç›´æ¥å¤åˆ¶åˆ°ç¡¬ä»¶é¡µè¡¨å¹¶åˆ·æ–° TLBã€‚
+     * ï¼ˆåœ¨ä¸Šä¸‹æ–‡åˆ‡æ¢æ—¶è°ƒç”¨ï¼Œå–ä»£åŸå…ˆå¸¦åç§»çš„ MapToPageTableï¼‰
+     */
+    void MapToPageTable();
+
+    void DisplayPageTable();
+
+    /* -------- æ•´ä½“å¸ƒå±€å»ºç«‹ï¼ˆexec è°ƒç”¨ï¼‰ -------- */
+
+    /**
+     * æ¸…ç©º shadow é¡µè¡¨ä¸­çš„æ‰€æœ‰é¡¹ï¼ˆP=0ï¼‰ã€‚
+     */
+    void ClearUserPageTable();
+
+    /**
+     * å»ºç«‹ç”¨æˆ·åœ°å€ç©ºé—´å¸ƒå±€ï¼š
+     *   - æ ¹æ® text/data/stack å‚æ•°åˆ›å»º VMAï¼›
+     *   - å°†ä»£ç æ®µé¡µæ˜ å°„åˆ°å…±äº« x_caddrï¼ˆå·²ç”± exec åŠ è½½å®Œæ¯•ï¼‰ï¼›
+     *   - æ•°æ®/BSS/å †/æ ˆé¡µå‡æ ‡è®°ä¸ºæœªæ˜ å°„ï¼ˆP=0ï¼‰ï¼Œç­‰å¾…ç¼ºé¡µè°ƒå…¥ã€‚
+     *
+     * æ³¨æ„ï¼šè°ƒç”¨è€…é¡»åœ¨è°ƒç”¨å‰å·²è°ƒç”¨ FreeAllVmas() æ¸…ç†æ—§æ˜ å°„ã€‚
+     */
+    bool EstablishUserPageTable(unsigned long textVirtualAddress,
+                                unsigned long textSize,
+                                unsigned long dataVirtualAddress,
+                                unsigned long dataSize,
+                                unsigned long stackSize);
+
+    /* -------- æ—§æ¥å£ï¼ˆä¿ç•™ä»¥å…¼å®¹ MapToPageTable ç›¸å…³è°ƒç”¨è·¯å¾„ï¼‰ -------- */
+    void MapTextEntrys(unsigned long textStartAddress, unsigned long textSize,
+                       unsigned long textPageIdxInPhyMemory);
+    void MapDataEntrys(unsigned long dataStartAddress, unsigned long dataSize,
+                       unsigned long dataPageIdxInPhyMemory);
+    void MapStackEntrys(unsigned long stackSize, unsigned long stackPageIdxInPhyMemory);
+
+    /* -------- Getters -------- */
+    PageTable*    GetUserPageTableArray();
+    unsigned long GetTextStartAddress();
+    unsigned long GetTextSize();
+    unsigned long GetDataStartAddress();
+    unsigned long GetDataSize();
+    unsigned long GetStackSize();
 
 private:
-	/* @commentÉèÖÃÒ³±íÄ¿Â¼Ïî
-	 * @param
-	 * unsigned long virtualAddress:	ĞéÄâµØÖ·(ÒÔ×Ö½ÚÎªµ¥Î») 
-	 * unsigned int size:				ĞèÒªÓ³ÉäµÄĞéÄâµØÖ·´óĞ¡(ÒÔ×Ö½ÚÎªµ¥Î») 
-	 * unsigned long phyPageIdx:		ÆäÊµÎïÀíÒ³Ë÷ÒıºÅ(Ò³Îªµ¥Î»)		
-	 * bool isReadWrite:				Ò³ÊôĞÔ£¬trueÎª¿É¶Á¿ÉĞ´Ò³
-	 */
-	unsigned int MemoryDescriptor::MapEntry(unsigned long virtualAddress, unsigned int size, unsigned long phyPageIdx, bool isReadWrite);
-	
+    /* æ—§çš„ per-page æ˜ å°„è¾…åŠ©ï¼ˆä¿ç•™ï¼Œä½† EstablishUserPageTable å·²ä¸å†ä¾èµ–ï¼‰ */
+    unsigned int MapEntry(unsigned long virtualAddress, unsigned int size,
+                          unsigned long phyPageIdx, bool isReadWrite);
+
 public:
-	PageTable*		m_UserPageTableArray;
-	/* ÒÔÏÂÊı¾İ¶¼ÊÇÏßĞÔµØÖ· */
-	unsigned long	m_TextStartAddress;	/* ´úÂë¶ÎÆğÊ¼µØÖ· */
-	unsigned long	m_TextSize;			/* ´úÂë¶Î³¤¶È */
+    /* -------- é¡µè¡¨ -------- */
+    PageTable*     m_UserPageTableArray;   /* shadow é¡µè¡¨ï¼ˆå†…æ ¸å†…å­˜ï¼‰ */
 
-	unsigned long	m_DataStartAddress; /* Êı¾İ¶ÎÆğÊ¼µØÖ· */
-	unsigned long	m_DataSize;			/* Êı¾İ¶Î³¤¶È */
+    /* -------- æ®µä¿¡æ¯ï¼ˆå…¼å®¹æ—§ä»£ç ï¼‰ -------- */
+    unsigned long  m_TextStartAddress;
+    unsigned long  m_TextSize;
+    unsigned long  m_DataStartAddress;
+    unsigned long  m_DataSize;
+    unsigned long  m_StackSize;
 
-	unsigned long	m_StackSize;		/* Õ»¶Î³¤¶È */
-	//unsigned long	m_HeapSize;			/* ¶Ñ¶Î³¤¶È */
+    /* -------- å † -------- */
+    unsigned long  m_HeapStart;   /* å †çš„èµ·å§‹è™šæ‹Ÿåœ°å€ï¼ˆç”± exec è®¾ç½®ï¼‰ */
+    unsigned long  m_HeapEnd;     /* å½“å‰ brk æŒ‡é’ˆï¼ˆå †å°¾ï¼Œéš sbrk/brk å˜åŒ–ï¼‰ */
+
+    /* -------- VMA é“¾è¡¨ -------- */
+    VmAreaStruct*  m_VmaList;     /* è¿›ç¨‹ VMA é“¾è¡¨å¤´ */
 };
 
 #endif
-

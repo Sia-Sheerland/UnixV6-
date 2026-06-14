@@ -4,13 +4,15 @@
 #include "Utility.h"
 #include "Machine.h"
 #include "Video.h"
+#include "PageRefCount.h"
+#include "PageManager.h"
 
 
 Process::Process()
 {
-	/* ±êÊ¶ËùÓĞp_statÎªSNULL£¬±êÊ¶¸Ã½ø³ÌÏî¿ÉÒÔÊ¹ÓÃ */
+	/* ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½p_statÎªSNULLï¿½ï¿½ï¿½ï¿½Ê¶ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ */
 	this->p_stat = SNULL;
-	/* ±ÜÃâ0#½ø³ÌÔÚWait()Ê±£¬Ğí¶à¿ÕÏĞprocessÏîÒÔ0#½ø³ÌÎª¸¸½ø³Ì */
+	/* ï¿½ï¿½ï¿½ï¿½0#ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Wait()Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½processï¿½ï¿½ï¿½ï¿½0#ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	this->p_ppid = -1;
 }
 
@@ -23,7 +25,7 @@ void Process::SetRun()
 {
 	ProcessManager& procMgr = Kernel::Instance().GetProcessManager();
 
-	/* Çå³ıË¯ÃßÔ­Òò£¬×ªÎª¾ÍĞ÷×´Ì¬ */
+	/* ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½Ô­ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½×´Ì¬ */
 	this->p_wchan = 0;
 	this->p_stat = Process::SRUN;
 	if ( this->p_pri < procMgr.CurPri )
@@ -58,7 +60,7 @@ void Process::SetPri()
 
 bool Process::IsSleepOn(unsigned long chan)
 {
-	/* ¼ì²éµ±Ç°½ø³ÌË¯ÃßÔ­ÒòÊÇ·ñÎªchan */
+	/* ï¿½ï¿½éµ±Ç°ï¿½ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½Ô­ï¿½ï¿½ï¿½Ç·ï¿½Îªchan */
 	if( this->p_wchan == chan 
 		&& (this->p_stat == Process::SWAIT || this->p_stat == Process::SSLEEP) )
 	{
@@ -75,22 +77,22 @@ void Process::Sleep(unsigned long chan, int pri)
 	if ( pri > 0 )
 	{
 		/* 
-		 * ½ø³ÌÔÚ½øÈëµÍÓÅÏÈÈ¨Ë¯ÃßÖ®Ç°£¬ÒÔ¼°±»»½ĞÑÖ®ºó£¬Èç¹û½ÓÊÕµ½²»¿ÉºöÂÔ
-		 * µÄĞÅºÅ£¬ÔòÍ£Ö¹Ö´ĞĞSleep()£¬Í¨¹ıaRetU()Ö±½ÓÌø×ª»ØTrap1()º¯Êı
+		 * ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨Ë¯ï¿½ï¿½Ö®Ç°ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½
+		 * ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½ï¿½Í£Ö¹Ö´ï¿½ï¿½Sleep()ï¿½ï¿½Í¨ï¿½ï¿½aRetU()Ö±ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Trap1()ï¿½ï¿½ï¿½ï¿½
 		 */
 		if ( this->IsSig() )
 		{
-			/* returnÈ·±£aRetU()Ìø»Øµ½SystemCall::Trap1()Ö®ºóÁ¢¿ÌÖ´ĞĞret·µ»ØÖ¸Áî */
+			/* returnÈ·ï¿½ï¿½aRetU()ï¿½ï¿½ï¿½Øµï¿½SystemCall::Trap1()Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½retï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
 			aRetU(u.u_qsav);
 			return;
 		}
 		/* 
-		* ´Ë´¦¹ØÖĞ¶Ï½øÈëÁÙ½çÇø£¬±£Ö¤½ø³ÌÔÚÉèÖÃË¯ÃßÔ­ÒòchanºÍ
-		* ¸Ä½ø³Ì×´Ì¬ÎªSSLEEPÖ®¼ä²»»á·¢ÉúÇĞ»»¡£
+		* ï¿½Ë´ï¿½ï¿½ï¿½ï¿½Ğ¶Ï½ï¿½ï¿½ï¿½ï¿½Ù½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½Ô­ï¿½ï¿½chanï¿½ï¿½
+		* ï¿½Ä½ï¿½ï¿½ï¿½×´Ì¬ÎªSSLEEPÖ®ï¿½ä²»ï¿½á·¢ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½
 		*/
 		X86Assembly::CLI();
 		this->p_wchan = chan;
-		/* ¸ù¾İË¯ÃßÓÅÏÈ¼¶priÈ·¶¨½ø³Ì½øÈë¸ß¡¢µÍÓÅÏÈÈ¨Ë¯Ãß */
+		/* ï¿½ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½priÈ·ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ß¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨Ë¯ï¿½ï¿½ */
 		this->p_stat = Process::SWAIT;
 		this->p_pri = pri;
 		X86Assembly::STI();
@@ -100,14 +102,14 @@ void Process::Sleep(unsigned long chan, int pri)
 			procMgr.RunIn = 0;
 			procMgr.WakeUpAll((unsigned long)&procMgr.RunIn);
 		}
-		/* µ±Ç°½ø³Ì·ÅÆúCPU£¬ÇĞ»»ÆäËü½ø³ÌÉÏÌ¨ */
+		/* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½CPUï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ */
 		//Diagnose::Write("Process %d Start Sleep!\n", this->p_pid);
 		Kernel::Instance().GetProcessManager().Swtch();
 		//Diagnose::Write("Process %d End Sleep!\n", this->p_pid);
-		/* ±»»½ĞÑÖ®ºóÔÙ´Î¼ì²éĞÅºÅ */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ù´Î¼ï¿½ï¿½ï¿½Åºï¿½ */
 		if ( this->IsSig() )
 		{
-			/* returnÈ·±£aRetU()Ìø»Øµ½SystemCall::Trap1()Ö®ºóÁ¢¿ÌÖ´ĞĞret·µ»ØÖ¸Áî */
+			/* returnÈ·ï¿½ï¿½aRetU()ï¿½ï¿½ï¿½Øµï¿½SystemCall::Trap1()Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½retï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ */
 			aRetU(u.u_qsav);
 			return;
 		}
@@ -116,12 +118,12 @@ void Process::Sleep(unsigned long chan, int pri)
 	{
 		X86Assembly::CLI();
 		this->p_wchan = chan;
-		/* ¸ù¾İË¯ÃßÓÅÏÈ¼¶priÈ·¶¨½ø³Ì½øÈë¸ß¡¢µÍÓÅÏÈÈ¨Ë¯Ãß */
+		/* ï¿½ï¿½ï¿½ï¿½Ë¯ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½priÈ·ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ß¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨Ë¯ï¿½ï¿½ */
 		this->p_stat = Process::SSLEEP;
 		this->p_pri = pri;
 		X86Assembly::STI();
 
-		/* µ±Ç°½ø³Ì·ÅÆúCPU£¬ÇĞ»»ÆäËü½ø³ÌÉÏÌ¨ */
+		/* ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½CPUï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ */
 		//Diagnose::Write("Process %d Start Sleep!\n", this->p_pid);
 		Kernel::Instance().GetProcessManager().Swtch();
 		//Diagnose::Write("Process %d End Sleep!\n", this->p_pid);
@@ -140,7 +142,7 @@ void Process::Expand(unsigned int newSize)
 	unsigned long oldAddress = pProcess->p_addr;
 	unsigned long newAddress;
 
-	/* Èç¹û½ø³ÌÍ¼ÏñËõĞ¡£¬ÔòÊÍ·Å¶àÓàµÄÄÚ´æ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½Í·Å¶ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ */
 	if ( oldSize >= newSize )
 	{
 		if(oldSize > newSize)
@@ -148,10 +150,10 @@ void Process::Expand(unsigned int newSize)
 		return;
 	}
 
-	/* ½ø³ÌÍ¼ÏñÀ©´ó£¬ĞèÒªÑ°ÕÒÒ»¿é´óĞ¡newSizeµÄÁ¬ĞøÄÚ´æÇø */
+	/* ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÑ°ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ğ¡newSizeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ */
 	SaveU(u.u_rsav);
 	newAddress = userPgMgr.AllocMemory(newSize);
-	/* ·ÖÅäÄÚ´æÊ§°Ü£¬½«½ø³ÌÔİÊ±»»³öµ½½»»»ÇøÉÏ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if ( NULL == newAddress )
 	{
 		SaveU(u.u_ssav);
@@ -160,14 +162,14 @@ void Process::Expand(unsigned int newSize)
 		procMgr.Swtch();
 		/* no return */
 	}
-	/* ·ÖÅäÄÚ´æ³É¹¦£¬½«½ø³ÌÍ¼Ïñ¿½±´µ½ĞÂÄÚ´æÇø£¬È»ºóÌø×ªµ½ĞÂÄÚ´æÇø¼ÌĞøÔËĞĞ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ñ¿½±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	pProcess->p_addr = newAddress;
 	for ( unsigned int i = 0; i < oldSize; i++ )
 	{
 		Utility::CopySeg(oldAddress + i, newAddress + i);
 	}
 
-	/* ÊÍ·ÅÔ­À´Õ¼ÓÃµÄÄÚ´æÇø */
+	/* ï¿½Í·ï¿½Ô­ï¿½ï¿½Õ¼ï¿½Ãµï¿½ï¿½Ú´ï¿½ï¿½ï¿½ */
 	userPgMgr.FreeMemory(oldSize, oldAddress);
 	
 	X86Assembly::CLI();
@@ -190,13 +192,13 @@ void Process::Exit()
 	/* Reset Tracing flag */
 	u.u_procp->p_flag &= (~Process::STRC);
 
-	/* Çå³ı½ø³ÌµÄĞÅºÅ´¦Àíº¯Êı£¬ÉèÖÃÎª1±íÊ¾²»¶Ô¸ÃĞÅºÅ×÷ÈÎºÎ´¦Àí */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª1ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Åºï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ï¿½ */
 	for ( i = 0; i < User::NSIG; i++ )
 	{
 		u.u_signal[i] = 1;
 	}
 
-	/* ¹Ø±Õ½ø³Ì´ò¿ªÎÄ¼ş */
+	/* ï¿½Ø±Õ½ï¿½ï¿½Ì´ï¿½ï¿½Ä¼ï¿½ */
 	for ( i = 0; i < OpenFiles::NOFILES; i++ )
 	{
 		File* pFile = NULL;
@@ -206,23 +208,21 @@ void Process::Exit()
 			u.u_ofiles.SetF(i, NULL);
 		}
 	}
-	/*  ·ÃÎÊ²»´æÔÚµÄfd»á²úÉúerror code£¬Çå³ıu.u_error±ÜÃâÓ°ÏìºóĞø³ÌĞòÖ´ĞĞÁ÷³Ì */
+	/*  ï¿½ï¿½ï¿½Ê²ï¿½ï¿½ï¿½ï¿½Úµï¿½fdï¿½ï¿½ï¿½ï¿½ï¿½error codeï¿½ï¿½ï¿½ï¿½ï¿½u.u_errorï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	u.u_error = User::NOERROR;
 
-	/* µİ¼õµ±Ç°Ä¿Â¼µÄÒıÓÃ¼ÆÊı */
+	/* ï¿½İ¼ï¿½ï¿½ï¿½Ç°Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ */
 	inodeTable.IPut(u.u_cdir);
 
-	/* ÊÍ·Å¸Ã½ø³Ì¶Ô¹²ÏíÕıÎÄ¶ÎµÄÒıÓÃ */
-	if ( u.u_procp->p_textp != NULL )
-	{
-		u.u_procp->p_textp->XFree();
-		u.u_procp->p_textp = NULL;
-	}
+	/* ï¿½Í·Å¸Ã½ï¿½ï¿½Ì¶Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Îµï¿½ï¿½ï¿½ï¿½ï¿½ */
+	/* é‡Šæ”¾æ‰€æœ‰é€é¡µåˆ†é…çš„ç”¨æˆ·ç‰©ç†é¡µï¼ˆdata/stackï¼‰ï¼Œå¹¶é‡Šæ”¾ VMA é“¾è¡¨ */
+	ProcessManager::FreeUserPages(u);
+	u.u_MemoryDescriptor.FreeAllVmas();
 
-	/* ½«uÇøĞ´Èë½»»»Çø£¬µÈ´ı¸¸½ø³Ì×öÉÆºó´¦Àí */
+	/* ï¿½ï¿½uï¿½ï¿½Ğ´ï¿½ë½»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ */
 	SwapperManager& swapperMgr = Kernel::Instance().GetSwapperManager();
 	BufferManager& bufMgr = Kernel::Instance().GetBufferManager();
-	/* uÇøµÄ´óĞ¡²»»á³¬¹ı512×Ö½Ú£¬ËùÒÔÖ»Ğ´ÈëppdaÇøµÄÇ°512×Ö½Ú£¬ÒÑÄÒÀ¨u½á¹¹µÄÈ«²¿ĞÅÏ¢ */
+	/* uï¿½ï¿½ï¿½Ä´ï¿½Ğ¡ï¿½ï¿½ï¿½á³¬ï¿½ï¿½512ï¿½Ö½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½Ö»Ğ´ï¿½ï¿½ppdaï¿½ï¿½ï¿½ï¿½Ç°512ï¿½Ö½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½uï¿½á¹¹ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½Ï¢ */
 	int blkno = swapperMgr.AllocSwap(BufferManager::BUFFER_SIZE);
 	if ( NULL == blkno )
 	{
@@ -232,15 +232,23 @@ void Process::Exit()
 	Utility::DWordCopy((int *)&u, (int *)pBuf->b_addr, BufferManager::BUFFER_SIZE / sizeof(int));
 	bufMgr.Bwrite(pBuf);
 
-	/* ÊÍ·ÅÄÚ´æ×ÊÔ´ */
+	if ( u.u_procp->p_textp != NULL )
+	{
+		u.u_procp->p_textp->XFree();
+		u.u_procp->p_textp = NULL;
+	}
+
+	/* é‡Šæ”¾ shadow é¡µè¡¨æ‰€å å†…æ ¸å†…å­˜ */
 	u.u_MemoryDescriptor.Release();
+
 	Process* current = u.u_procp;
 	UserPageManager& userPageMgr = Kernel::Instance().GetUserPageManager();
-	userPageMgr.FreeMemory(current->p_size, current->p_addr);
+	/* æ–°æ¨¡å‹ä¸‹ p_size == USIZEï¼Œp_addr æŒ‡å‘ ppdaï¼ˆ1 é¡µï¼‰ */
+	userPageMgr.FreeMemory(ProcessManager::USIZE, current->p_addr);
 	current->p_addr = blkno;
 	current->p_stat = Process::SZOMB;
 
-	/* »½ĞÑ¸¸½ø³Ì½øĞĞÉÆºó´¦Àí */
+	/* ï¿½ï¿½ï¿½Ñ¸ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ */
 	for ( i = 0; i < ProcessManager::NPROC; i++ )
 	{
 		if ( procMgr.process[i].p_pid == current->p_ppid )
@@ -249,14 +257,14 @@ void Process::Exit()
 			break;
 		}
 	}
-	/* Ã»ÕÒµ½¸¸½ø³Ì */
+	/* Ã»ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if ( ProcessManager::NPROC == i )
 	{
 		current->p_ppid = 1;
 		procMgr.WakeUpAll((unsigned long)&procMgr.process[1]);
 	}
 
-	/* ½«×Ô¼ºµÄ×Ó½ø³Ì´«¸ø×Ô¼ºµÄ¸¸½ø³Ì */
+	/* ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	for ( i = 0; i < ProcessManager::NPROC; i++ )
 	{
 		if ( current->p_pid == procMgr.process[i].p_ppid )
@@ -277,7 +285,7 @@ void Process::Clone(Process& proc)
 {
 	User& u = Kernel::Instance().GetUser();
 
-	/* ¿½±´¸¸½ø³ÌProcess½á¹¹ÖĞµÄ´ó²¿·ÖÊı¾İ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Processï¿½á¹¹ï¿½ĞµÄ´ó²¿·ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	proc.p_size = this->p_size;
 	proc.p_stat = Process::SRUN;
 	proc.p_flag = Process::SLOAD;
@@ -286,16 +294,16 @@ void Process::Clone(Process& proc)
 	proc.p_nice = this->p_nice;
 	proc.p_textp = this->p_textp;
 	
-	/* ½¨Á¢¸¸×Ó¹ØÏµ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½Ïµ */
 	proc.p_pid = ProcessManager::NextUniquePid();
 	proc.p_ppid = this->p_pid;
 	
-	/* ³õÊ¼»¯½ø³Ìµ÷¶ÈÏà¹Ø³ÉÔ± */
-	proc.p_pri = 0;		/* È·±£childµÄÓÅÏÈÊı½ÏĞ¡£¬ÓëÆäËü½ø³ÌÏà±È¸üÓĞ»ú»áÕ¼ÓÃCPU */
+	/* ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½Ø³ï¿½Ô± */
+	proc.p_pri = 0;		/* È·ï¿½ï¿½childï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¸ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½CPU */
 	proc.p_time = 0;
 	
 
-	/* ´ò¿ªÎÄ¼ş¿ØÖÆ¿éFile½á¹¹ÒıÓÃ¼ÆÊı+1 */
+	/* ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½Fileï¿½á¹¹ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½+1 */
 	for ( int i = 0; i < OpenFiles::NOFILES; i++ )
 	{
 		File* pFile;
@@ -305,102 +313,119 @@ void Process::Clone(Process& proc)
 		}
 	}
 	/* 
-	 * GetF()·ÃÎÊu.u_ofilesÖĞµÄ¿ÕÏĞÏî»á²úÉú³ö´íÂë£¬
-	 * Èç²»Çå³ı½«µ¼ÖÂ½ø³Ì´´½¨(fork)ÏµÍ³µ÷ÓÃÊ§°Ü¡£
+	 * GetF()ï¿½ï¿½ï¿½ï¿½u.u_ofilesï¿½ĞµÄ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£¬
+	 * ï¿½ç²»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½(fork)ÏµÍ³ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü¡ï¿½
 	 */
 	u.u_error = User::NOERROR;
 
-	/* Ôö¼Ó¶Ô¹²ÏíÕıÎÄ¶ÎµÄÒıÓÃ¼ÆÊı */
+	/* ï¿½ï¿½ï¿½Ó¶Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Îµï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ */
 	if ( proc.p_textp != 0 )
 	{
 		proc.p_textp->x_count++;
 		proc.p_textp->x_ccount++;
 	}
 
-	/* Ôö¼Ó¶Ôµ±Ç°¹¤×÷Ä¿Â¼µÄÒıÓÃ¼ÆÊı */
+	/* ï¿½ï¿½ï¿½Ó¶Ôµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ */
 	u.u_cdir->i_count++;
 }
 
-//ÓÃÓÚ¶ÑÕ»Òç³öÊ±£¬×Ô¶¯À©Õ¹¶ÑÕ»
+/* æ ˆå‘ä¸‹æ‰©å±•ä¸€é¡µï¼ˆç¼ºé¡µå¤„ç†ç¨‹åºæ£€æµ‹åˆ°æ ˆæ‰©å±•æ—¶è°ƒç”¨ï¼‰ */
 void Process::SStack()
 {
 	User& u = Kernel::Instance().GetUser();
 	MemoryDescriptor& md = u.u_MemoryDescriptor;
-	unsigned int change = 4096;
-	//unsigned int change = 0;
-	md.m_StackSize += change;
-	unsigned int newSize = ProcessManager::USIZE + md.m_DataSize + md.m_StackSize;
 
-	if ( false == u.u_MemoryDescriptor.EstablishUserPageTable(md.m_TextStartAddress,
-						md.m_TextSize, md.m_DataStartAddress, md.m_DataSize, md.m_StackSize) )
-	{
+	unsigned long newPageVA = MemoryDescriptor::USER_SPACE_SIZE
+	                          - md.m_StackSize - PageManager::PAGE_SIZE;
+
+	/* é˜²æ­¢æ ˆä¸å †ç¢°æ’ */
+	if (newPageVA < md.m_HeapEnd + PageManager::PAGE_SIZE) {
 		u.u_error = User::ENOMEM;
 		return;
 	}
 
-	this->Expand(newSize);
-	int dst = u.u_procp->p_addr + newSize;
-	unsigned int count = md.m_StackSize - change;
-	while(count--)
-	{
-		dst--;
-		Utility::CopySeg(dst - change, dst);
+	UserPageManager& upm = Kernel::Instance().GetUserPageManager();
+	unsigned long physPage = upm.AllocMemory(PageManager::PAGE_SIZE);
+	if (!physPage) {
+		u.u_error = User::ENOMEM;
+		return;
 	}
+	PageRefCount::Set(physPage, 1);
 
-	u.u_MemoryDescriptor.MapToPageTable();
+	/* æ˜ å°„å¹¶æ¸…é›¶æ–°æ ˆé¡µ */
+	md.MapPageDirect(newPageVA, physPage >> 12, true);
+	unsigned char* p = (unsigned char*)newPageVA;
+	for (int i = 0; i < (int)PageManager::PAGE_SIZE; i++) p[i] = 0;
+
+	md.m_StackSize += PageManager::PAGE_SIZE;
+
+	/* æ‰©å±•æ ˆ VMA çš„èµ·å§‹åœ°å€ */
+	for (VmAreaStruct* v = md.m_VmaList; v; v = v->next) {
+		if (v->vm_flags & VM_STACK) {
+			v->vm_start = newPageVA;
+			return;
+		}
+	}
+	/* è‹¥æ‰¾ä¸åˆ°æ ˆ VMAï¼ˆç¬¬ä¸€æ¬¡æ‰©å±•å‰æœªå»ºç«‹ï¼‰ï¼Œæ–°å»ºä¸€ä¸ª */
+	md.AddVma(newPageVA, MemoryDescriptor::USER_SPACE_SIZE,
+	          VM_PROT_READ | VM_PROT_WRITE, VM_STACK | VM_ANON, 0, 0, 0);
 }
 
 
+/* brk/sbrk å †å¤§å°è°ƒæ•´ï¼šè°ƒæ•´ m_HeapEndï¼Œé¡µæŒ‰éœ€ç¼ºé¡µåˆ†é…ï¼ˆä¸ç«‹å³åˆ†é…ç‰©ç†é¡µï¼‰ */
 void Process::SBreak()
 {
 	User& u = Kernel::Instance().GetUser();
-	unsigned int newEnd = u.u_arg[0];
+	unsigned long newEnd = (unsigned long)u.u_arg[0];
 	MemoryDescriptor& md = u.u_MemoryDescriptor;
-	unsigned int newSize = newEnd - md.m_DataStartAddress;
 
-	if (newEnd == 0)
-	{
-		u.u_ar0[User::EAX] = md.m_DataStartAddress + md.m_DataSize;
+	/* newEnd == 0ï¼šæŸ¥è¯¢å½“å‰ brk */
+	if (newEnd == 0) {
+		u.u_ar0[User::EAX] = (int)md.m_HeapEnd;
 		return;
 	}
 
-	if ( false == u.u_MemoryDescriptor.EstablishUserPageTable(md.m_TextStartAddress, 
-						md.m_TextSize, md.m_DataStartAddress, newSize, md.m_StackSize) )
-	{
-		//ÏµÍ³µ÷ÓÃ³ö´íÊ±£¬²»¿ÉÒÔÓÃÕâÖÖ·½Ê½·µ»Ø¡£Ö´ĞĞÕâÌõÂ·¾¶»áµ¼ÖÂ u.u_intflg == 1£¬u.u_error±»´íÎóĞŞ¸ÄÎªEINTR£¨4£©£»ÎŞÂÛºÎ¹Êµ¼ÖÂÏµÍ³µ÷ÓÃÊ§°Ü¡£
-		//aRetU(u.u_qsav);
+	/* ä¸èƒ½ä½äºå †èµ·å§‹åœ°å€ */
+	if (newEnd < md.m_HeapStart) {
+		u.u_error = User::ENOMEM;
 		return;
 	}
 
-	int change = newSize - md.m_DataSize;
-	md.m_DataSize = newSize;
-	newSize += ProcessManager::USIZE + md.m_StackSize;
+	/* ä¸èƒ½ä¾µå…¥æ ˆåŒº */
+	unsigned long stackBase = MemoryDescriptor::USER_SPACE_SIZE - md.m_StackSize;
+	if (newEnd >= stackBase - PageManager::PAGE_SIZE) {
+		u.u_error = User::ENOMEM;
+		return;
+	}
 
-	/* Êı¾İ¶ÎËõĞ¡ */
-	if ( change < 0 )
-	{
-		int dst = u.u_procp->p_addr + newSize - md.m_StackSize;
-		int count = md.m_StackSize;
-		while(count--)
-		{
-			Utility::CopySeg(dst - change, dst);
-			dst++;
-		}
-		this->Expand(newSize);
-	}
-	/* Êı¾İ¶ÎÔö´ó */
-	else if ( change > 0 )
-	{
-		this->Expand(newSize);
-		int dst = u.u_procp->p_addr + newSize;
-		int count = md.m_StackSize;
-		while(count--)
-		{
-			dst--;
-			Utility::CopySeg(dst - change, dst);
+	/* ç¼©å°å †ï¼šé‡Šæ”¾å·²æ˜ å°„çš„å¤šä½™é¡µ */
+	if (newEnd < md.m_HeapEnd) {
+		unsigned long freeStart = (newEnd + PageManager::PAGE_SIZE - 1)
+		                          & ~(PageManager::PAGE_SIZE - 1UL);
+		unsigned long freeEnd   = md.m_HeapEnd & ~(PageManager::PAGE_SIZE - 1UL);
+		UserPageManager& upm = Kernel::Instance().GetUserPageManager();
+		for (unsigned long va = freeStart; va < freeEnd; va += PageManager::PAGE_SIZE) {
+			PageTableEntry& pte = md.GetPTE(va);
+			if (pte.m_Present) {
+				unsigned long phys = (unsigned long)pte.m_PageBaseAddress << 12;
+				PageRefCount::Dec(phys);
+				if (PageRefCount::Get(phys) == 0)
+					upm.FreeMemory(PageManager::PAGE_SIZE, phys);
+				md.UnmapPage(va);
+			}
 		}
 	}
-	u.u_ar0[User::EAX] = md.m_DataStartAddress + md.m_DataSize;
+
+	/* æ›´æ–°å † VMA çš„ç»“æŸåœ°å€ */
+	for (VmAreaStruct* v = md.m_VmaList; v; v = v->next) {
+		if (v->vm_flags & VM_HEAP) {
+			v->vm_end = newEnd;
+			break;
+		}
+	}
+
+	md.m_HeapEnd = newEnd;
+	u.u_ar0[User::EAX] = (int)newEnd;
 }
 
 void Process::PSignal( int signal )
@@ -410,17 +435,17 @@ void Process::PSignal( int signal )
 		return;
 	}
 
-	/* Èç¹ûÒÑ¾­½ÓÊÕµ½SIGKILLĞÅºÅ£¬ÔòºöÂÔºóĞøĞÅºÅ */
+	/* ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Õµï¿½SIGKILLï¿½ÅºÅ£ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½ï¿½Åºï¿½ */
 	if ( this->p_sig != User::SIGKILL )
 	{
 		this->p_sig = signal;
 	}
-	/* Èô½ø³ÌµÄÓÅÏÈÊı´óÓÚPUSER(100)£¬Ôò½«ÆäÉèÖÃÎªPUSER */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PUSER(100)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªPUSER */
 	if ( this->p_pri > ProcessManager::PUSER )
 	{
 		this->p_pri	= ProcessManager::PUSER;
 	}
-	/* Èô½ø³ÌµÄ´¦ÓÚµÍÓÅÏÈÈ¨Ë¯Ãß£¬Ôò½«Æä»½ĞÑ */
+	/* ï¿½ï¿½ï¿½ï¿½ï¿½ÌµÄ´ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½È¨Ë¯ï¿½ß£ï¿½ï¿½ï¿½ï¿½ä»½ï¿½ï¿½ */
 	if ( this->p_stat == Process::SWAIT )
 	{
 		this->SetRun();
@@ -431,12 +456,12 @@ int Process::IsSig()
 {
 	User& u = Kernel::Instance().GetUser();
 
-	/* Î´½ÓÊÜµ½ĞÅºÅ */
+	/* Î´ï¿½ï¿½ï¿½Üµï¿½ï¿½Åºï¿½ */
 	if ( this->p_sig == 0 )
 	{
 		return 0;
 	}
-	/* u.u_signal[n]ÎªÅ¼Êı²Å±íÊ¾¶ÔĞÅºÅ½ø³Ì´¦Àí */
+	/* u.u_signal[n]ÎªÅ¼ï¿½ï¿½ï¿½Å±ï¿½Ê¾ï¿½ï¿½ï¿½ÅºÅ½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½ */
 	else if ( (u.u_signal[this->p_sig] & 1) == 0 )
 	{
 		return this->p_sig;
@@ -453,17 +478,17 @@ void Process::PSig(struct pt_context* pContext)
 {
 	User& u = Kernel::Instance().GetUser();
 	int signal = this->p_sig;
-	/* Çå³ıÒÑ½øÈë´¦ÀíÁ÷³ÌµÄĞÅºÅ */
+	/* ï¿½ï¿½ï¿½ï¿½Ñ½ï¿½ï¿½ë´¦ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½Åºï¿½ */
 	this->p_sig = 0;
 
 	if ( u.u_signal[signal] != 0 )
 	{
-		/* Çå³ı½ø³ÌÔÚÊÕµ½ĞÅºÅÖ®Ç°Ö´ĞĞÏµÍ³µ÷ÓÃÆÚ¼ä¿ÉÄÜ²úÉúµÄErrCode */
+		/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½Åºï¿½Ö®Ç°Ö´ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½ï¿½ï¿½ErrCode */
 		u.u_error = User::NOERROR;
 
 		unsigned int old_eip = pContext->eip;
 
-		/* ºËĞÄÌ¬·µ»ØÖµÎªÔ¤¶¨µÄÓÃ»§º¯ÊıSignalHandler()µÄÊ×µØÖ· */
+		/* ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ÖµÎªÔ¤ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½SignalHandler()ï¿½ï¿½ï¿½×µï¿½Ö· */
 		/*pContext->eip = ((unsigned long)SignalHandler - (unsigned long)runtime);
 		pContext->esp -= 8;
 		int* pInt = (int *)pContext->esp;
@@ -475,14 +500,14 @@ void Process::PSig(struct pt_context* pContext)
 		*pInt = old_eip;
 
 		/* 
-		 * µ±Ç°ĞÅºÅ´¦Àíº¯ÊıÔÚÏìÓ¦Íê±¾´ÎĞÅºÅÖ®ºó£¬ĞèÒªÖØÖÃÎªÄ¬ÈÏ
-		 * µÄĞÅºÅ´¦Àíº¯Êı£¬ÉèÎª0±íÊ¾¶ÔĞÅºÅµÄ´¦Àí·½Ê½ÎªÖÕÖ¹±¾½ø³Ì¡£
+		 * ï¿½ï¿½Ç°ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ê±¾ï¿½ï¿½ï¿½Åºï¿½Ö®ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½
+		 * ï¿½ï¿½ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ÅºÅµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½Ê½Îªï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½Ì¡ï¿½
 		 */
 		u.u_signal[signal] = 0;
 		return;
 	}
 
-	/* u.u_signal[n]Îª0£¬Ôò¶ÔĞÅºÅµÄ´¦Àí·½Ê½ÊÇÖÕÖ¹±¾½ø³Ì */
+	/* u.u_signal[n]Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	u.u_procp->Exit();
 }
 
@@ -497,7 +522,7 @@ void Process::Nice()
 	}
 	if (niceValue < 0 && !u.SUser())
 	{
-		/* ·ÇÏµÍ³³¬¼¶ÓÃ»§²»ÄÜÎª½ø³ÌÉèÖÃĞ¡ÓÚ0µÄ½ø³ÌÓÅÏÈÊı¼ÆËãÆ«ÖÃÖµ */
+		/* ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½0ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½Öµ */
 		niceValue = 0;
 	}
 	this->p_nice = niceValue;
@@ -510,16 +535,16 @@ void Process::Ssig()
 	int signalIndex = u.u_arg[0];
 	unsigned long func = u.u_arg[1];
 
-	/* Õâ¼¸¸öĞÅºÅ²»ĞíÉèÖÃ */
+	/* ï¿½â¼¸ï¿½ï¿½ï¿½ÅºÅ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	if ( signalIndex <= 0 || signalIndex >= User::NSIG || signalIndex == User::SIGKILL )
 	{
 		u.u_error = User::EINVAL;
 		return;
 	}
-	/* ÉèÖÃº¯ÊıµØÖ·µ½ĞÅºÅ´¦Àíº¯ÊıÊı×é */
+	/* ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	u.u_ar0[User::EAX] = u.u_signal[signalIndex];
 	u.u_signal[signalIndex] = func;
-	/* Çåµ±Ç°ĞÅºÅ */
+	/* ï¿½åµ±Ç°ï¿½Åºï¿½ */
 	if ( u.u_procp->p_sig == signalIndex )
 	{
 		u.u_procp->p_sig = 0;
